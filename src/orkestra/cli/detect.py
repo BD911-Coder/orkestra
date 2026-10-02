@@ -1,0 +1,144 @@
+"""Project-culture detection and spec-quality nudges for friendlier setup.
+
+Heuristics only - everything here produces *suggestions* the user can
+edit, never silent behavior changes.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import subprocess  # nosec B404 - argv-only, no shell, fixed arguments
+from pathlib import Path
+
+
+def _pytest_command(root: Path) -> str:
+    """A pytest gate that reads the tree it is run in.
+
+    Bare ``pytest -q`` does not, in general. The console script resolves
+    imports through its own interpreter's ``sys.path``, and for a src-layout
+    project installed editable that path holds an absolute pointer to the
+    checkout the install was made from - so run in one of Orkestra's task
+    worktrees it happily tests a *different* tree and cannot fail. Prefer
+    ``uv run``, which re-resolves the environment for the current directory;
+    otherwise ``python3 -m pytest``, which at least puts the current
+    directory first. Orkestra also prepends a worktree-scoped PYTHONPATH
+    when it runs the gate, and proves the binding before trusting it.
+    """
+    if (root / "uv.lock").exists():
+        return "uv run pytest -q"
+    if _module_runs("python3", "pytest"):
+        return "python3 -m pytest -q"
+    return "pytest -q"
+
+
+def _module_runs(interpreter: str, module: str) -> bool:
+    """True if *interpreter* can actually run *module*.
+
+    `pytest` on PATH does not imply `python3 -m pytest` works: the console
+    script may belong to a different environment entirely, and suggesting a
+    gate that cannot start is worse than suggesting a weaker one.
+    """
+    executable = shutil.which(interpreter)
+    if not executable:
+        return False
+    try:
+        completed = subprocess.run(
+            [executable, "-m", module, "--version"],
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return completed.returncode == 0
+
+
+def detect_verify_commands(root: Path) -> list[str]:
+    """Guess deterministic acceptance commands from the repo's test culture."""
+    commands: list[str] = []
+
+    def has(*names: str) -> bool:
+        return any((root / n).exists() for n in names)
+
+    python_markers = has("pyproject.toml", "pytest.ini", "setup.cfg", "tox.ini")
+    tests_dir = has("tests", "test")
+    if python_markers or tests_dir:
+        pyproject = root / "pyproject.toml"
+        text = pyproject.read_text(encoding="utf-8") if pyproject.exists() else ""
+        # Look at what the tests actually import: recommending `pytest -q`
+        # for a stdlib-unittest project produces a gate that cannot run.
+        sources = [p for name in ("tests", "test") for p in (root / name).rglob("test_*.py")][:20]
+        bodies = []
+        for path in sources:
+            try:
+                bodies.append(path.read_text(encoding="utf-8", errors="ignore")[:4000])
+            except OSError:  # pragma: no cover - unreadable file
+                continue
+        joined = "\n".join(bodies)
+        uses_pytest = "pytest" in text or has("pytest.ini") or "import pytest" in joined
+        uses_unittest = "import unittest" in joined or "from unittest" in joined
+        if uses_pytest and (shutil.which("pytest") or (root / "uv.lock").exists()):
+            commands.append(_pytest_command(root))
+        elif uses_unittest or (tests_dir and sources):
+            commands.append("python3 -m unittest discover -q")
+
+    package_json = root / "package.json"
+    if package_json.exists():
+        try:
+            scripts = json.loads(package_json.read_text(encoding="utf-8")).get("scripts", {})
+        except (json.JSONDecodeError, OSError):
+            scripts = {}
+        if "test" in scripts and "no test specified" not in str(scripts["test"]):
+            commands.append("npm test --silent")
+
+    if has("Cargo.toml"):
+        commands.append("cargo test")
+    if has("go.mod"):
+        commands.append("go test ./...")
+
+    return commands
+
+
+_HEADING_RE = re.compile(r"^#{1,6}\s+\S", re.MULTILINE)
+_ACCEPTANCE_HINTS = re.compile(
+    r"(?i)\b(accept|must|should|verif|test|pass|criteri|exactly|require)"
+)
+_TEMPLATE_FILLER = re.compile(r"^\s*-\s*\.\.\.\s*$", re.MULTILINE)
+
+
+def spec_nudges(spec_text: str) -> list[str]:
+    """Friendly, non-blocking warnings about spec quality.
+
+    Plan quality tracks spec quality almost 1:1 (observed in live runs) -
+    these catch the most common weak-spec patterns before quota is spent.
+    """
+    nudges: list[str] = []
+    stripped = spec_text.strip()
+    if len(stripped) < 200:
+        nudges.append(
+            "your SPEC.md is very short - the director can only plan what "
+            "you describe. A few concrete sentences per goal go a long way."
+        )
+    if _TEMPLATE_FILLER.search(spec_text):
+        nudges.append(
+            "SPEC.md still contains template placeholders ('- ...') - "
+            "replace them with your actual goals and constraints."
+        )
+    if not _HEADING_RE.search(spec_text):
+        nudges.append(
+            "SPEC.md has no headings - structure (Goals / Constraints / "
+            "Acceptance) helps the director decompose work."
+        )
+    if not _ACCEPTANCE_HINTS.search(spec_text):
+        nudges.append(
+            "SPEC.md doesn't state how success is judged - add acceptance "
+            "criteria (testable statements) so reviews have a yardstick."
+        )
+    if "do not" not in spec_text.lower() and "don't" not in spec_text.lower():
+        nudges.append(
+            "consider stating what agents must NOT touch (directories, "
+            "interfaces, dependencies) - boundaries prevent surprises."
+        )
+    return nudges
