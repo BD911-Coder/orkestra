@@ -8,7 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Adaptive Multi-AI Command Center:** First-class provider resource & quota window tracking (`QuotaWindow`, `ProviderUsageSnapshot`), multi-window scarcity logic, and waste-risk optimization.
+- **Deterministic Adaptive Resource Router:** Scores candidate execution profiles dynamically based on task demands, quality floors, waste-risk expiry pressure, and multi-window scarcity penalties.
+- **Mid-Task Provider Handoff:** Interrupted or rate-limited task attempts preserve worktree state, record `HandoffCheckpoint` records, and resume under successor provider profiles.
+- **Persistent Logical Director & Failover:** The Director role is backed by persistent SQLite state (`LogicalDirectorState`) and automatically fails over across eligible provider adapters when interrupted.
+- **Full-Screen Command Center TUI (`orkestra watch`):** Textual command center displaying provider resource cards with quota progress bars, live agent hierarchy tree, task DAG state, decision explanation stream, and event logs.
+- **CLI Commands:** Added `orkestra usage [--refresh]` and `orkestra routing explain [TASK]`.
+
 ### Changed
+
 - `verify.binding_check` now defaults to **true**. It was off because it cost
   two extra gate runs per run, which meant the one measure of evidence
   quality read `not_checked` for everybody, and the property the project is

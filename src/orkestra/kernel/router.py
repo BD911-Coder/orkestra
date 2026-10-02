@@ -184,13 +184,32 @@ class ResourceRouter:
         snapshots: dict[str, ProviderUsageSnapshot],
         failed_agents: list[str] | None = None,
         store: Store | None = None,
+        allowed_agents: list[str] | None = None,
     ) -> RoutingDecision:
         """Scores candidate profiles and returns an auditable RoutingDecision."""
         failed_agents = failed_agents or []
         req_quality = self.required_quality_floor(spec)
         now = _now_iso()
 
-        candidates: list[ExecutionProfile] = [p for p in self._profiles.values() if p.enabled]
+        # Dynamically register profiles for allowed agents if missing
+        if allowed_agents:
+            for agent_name in allowed_agents:
+                if not any(p.provider == agent_name for p in self._profiles.values()):
+                    self._profiles[f"{agent_name}-default"] = ExecutionProfile(
+                        profile_id=f"{agent_name}-default",
+                        provider=agent_name,
+                        adapter=agent_name,
+                        model="default",
+                        quality_rank=7,
+                        capabilities=["python", "implement", "test", "review", "document"],
+                    )
+
+        candidates: list[ExecutionProfile] = [
+            p
+            for p in self._profiles.values()
+            if p.enabled and (allowed_agents is None or p.provider in allowed_agents)
+        ]
+
         scored_profiles: list[tuple[float, ExecutionProfile, list[str], float, float, bool]] = []
 
         for p in candidates:
@@ -263,7 +282,17 @@ class ResourceRouter:
 
         if not scored_profiles:
             # Fallback profile when all options fail quality floor or exhaustion
-            fallback_profile = self._profiles.get("claude-opus-high") or list(self._profiles.values())[0]
+            fallback_agent = allowed_agents[0] if allowed_agents else "claude"
+            fallback_profile = next(
+                (p for p in self._profiles.values() if p.provider == fallback_agent),
+                ExecutionProfile(
+                    profile_id=f"{fallback_agent}-default",
+                    provider=fallback_agent,
+                    adapter=fallback_agent,
+                    model="default",
+                    quality_rank=7,
+                ),
+            )
             return RoutingDecision(
                 decision_id=f"dec_{task_id}",
                 run_id=run_id,
@@ -277,6 +306,7 @@ class ResourceRouter:
                 quality_floor_applied=True,
                 timestamp=now,
             )
+
 
         # Sort descending by score
         scored_profiles.sort(key=lambda x: x[0], reverse=True)

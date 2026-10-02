@@ -134,6 +134,7 @@ class QuotaTracker:
             if self.cooling_down(name):
                 snap.state = ResourceState.COOLDOWN
 
+        chain = [primary, *[f for f in fallbacks if f != primary]]
         decision = self.router.select_best_profile(
             task_id=task_id,
             run_id=self.run_id,
@@ -141,7 +142,9 @@ class QuotaTracker:
             snapshots=snapshots,
             failed_agents=failed_agents,
             store=self.store,
+            allowed_agents=chain,
         )
+
 
         selected_profile = self.router.get_profile(decision.selected_profile)
         selected_agent = selected_profile.provider if selected_profile else primary

@@ -127,6 +127,23 @@ class ProbeConfig(BaseModel):
     timeout_s: int = Field(default=240, ge=10, le=3600)
 
 
+class RoutingConfig(BaseModel):
+    """Adaptive resource routing policy options."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["adaptive", "static"] = "adaptive"
+    quota_aware: bool = True
+    quota_optimization: bool = True
+    waste_risk: bool = True
+    allow_handoff: bool = True
+    allow_model_escalation: bool = True
+    usage_refresh_seconds: int = Field(default=60, ge=5, le=3600)
+    max_handoffs_per_task: int = Field(default=2, ge=0, le=10)
+    stagnation_threshold: int = Field(default=3, ge=1, le=10)
+    quality_floor: bool = True
+
+
 class ProjectSection(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -146,6 +163,8 @@ class ProjectConfig(BaseModel):
     policy: PolicyConfig = Field(default_factory=PolicyConfig)
     verify: VerifyConfig = Field(default_factory=VerifyConfig)
     probes: ProbeConfig = Field(default_factory=ProbeConfig)
+    routing: RoutingConfig = Field(default_factory=RoutingConfig)
+
 
     @model_validator(mode="after")
     def _validate(self) -> Self:

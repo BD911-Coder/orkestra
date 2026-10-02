@@ -32,8 +32,12 @@ app = typer.Typer(
 agents_app = typer.Typer(help="Inspect and probe configured agents.")
 app.add_typer(agents_app, name="agents")
 
+routing_app = typer.Typer(help="Inspect resource routing decisions and explanations.")
+app.add_typer(routing_app, name="routing")
+
 console = Console()
 err_console = Console(stderr=True)
+
 
 
 def _version_callback(value: bool) -> None:
@@ -1987,6 +1991,109 @@ def watch(
         WatchApp(application, resolved).run()
     finally:
         application.close()
+
+
+@app.command()
+def usage(
+    refresh: Annotated[
+        bool, typer.Option("--refresh", help="Probe provider CLI usage collectors live.")
+    ] = False,
+) -> None:
+    """Inspect provider resources, remaining quota, reset countdowns, and provenance."""
+    application = _load_app()
+    try:
+        if refresh:
+            from orkestra.adapters.collectors import CollectorRegistry
+
+            registry = CollectorRegistry()
+            snapshots = asyncio.run(registry.collect_all(application.store, "latest"))
+            for snap in snapshots.values():
+                application.store.add_provider_snapshot(snap)
+        else:
+            snapshots = application.store.latest_provider_snapshots()
+
+        table = Table(title="Provider Resource Snapshots", show_header=True)
+        table.add_column("Provider", style="yellow")
+        table.add_column("Health", style="cyan")
+        table.add_column("State", style="magenta")
+        table.add_column("Remaining %", style="green")
+        table.add_column("Reset Countdown", style="blue")
+        table.add_column("Source", style="dim")
+        table.add_column("Confidence", style="bold")
+        table.add_column("Waste Risk", style="yellow")
+        table.add_column("Scarcity", style="red")
+
+        if not snapshots:
+            console.print(
+                "[dim]No provider snapshots recorded. Run `orkestra usage --refresh` to collect live snapshots.[/dim]"
+            )
+            return
+
+        for name, snap in snapshots.items():
+            w0 = snap.windows[0] if snap.windows else None
+            rem_str = (
+                f"{int(w0.remaining_ratio * 100)}%"
+                if w0 and w0.remaining_ratio is not None
+                else "UNKNOWN"
+            )
+            reset_str = f"{w0.seconds_to_reset/3600:.1f}h" if w0 and w0.seconds_to_reset else "-"
+            source_str = w0.source.value if w0 else "unknown"
+            conf_str = w0.confidence.value if w0 else "unknown"
+
+            table.add_row(
+                name.upper(),
+                snap.health.value.upper(),
+                snap.state.value.upper(),
+                rem_str,
+                reset_str,
+                source_str,
+                conf_str,
+                f"{snap.waste_risk:.2f}",
+                f"{snap.scarcity:.2f}",
+            )
+
+        console.print(table)
+    finally:
+        application.close()
+
+
+@routing_app.command("explain")
+def routing_explain(
+    task: Annotated[str | None, typer.Argument(help="Task key or task ID to explain.")] = None,
+    run_id: Annotated[str | None, typer.Option("--run")] = None,
+) -> None:
+    """Explain deterministic routing decisions for a task or run."""
+    application = _load_app()
+    try:
+        resolved_run = _pick_run(application, run_id)
+        decisions = application.store.routing_decisions_for_run(resolved_run, limit=20)
+
+        if task:
+            decisions = [d for d in decisions if d.task_id == task or task in d.decision_id]
+
+        if not decisions:
+            console.print(f"[dim]No routing decisions found for run {resolved_run}.[/dim]")
+            return
+
+        table = Table(title=f"Routing Decision Explanations (Run {resolved_run})", show_header=True)
+        table.add_column("Timestamp", style="dim")
+        table.add_column("Task ID", style="cyan")
+        table.add_column("Selected Profile", style="bold yellow")
+        table.add_column("Score", style="bold green")
+        table.add_column("Reasons / Factors", style="white")
+
+        for d in decisions:
+            table.add_row(
+                d.timestamp[11:19] if d.timestamp else "-",
+                d.task_id,
+                d.selected_profile,
+                f"{d.score:.2f}",
+                ", ".join(d.reasons[:4]),
+            )
+        console.print(table)
+    finally:
+        application.close()
+
 
 
 def main() -> None:  # console-script shim used by some packagers

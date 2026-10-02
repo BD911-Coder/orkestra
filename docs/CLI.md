@@ -45,6 +45,15 @@ Your lineup at a glance: profile, adapter, model, effort, availability,
 and where each model value came from (discovered / documented / manual /
 default).
 
+### `orkestra usage [--refresh]`
+
+Inspect provider resources, active quota windows (5h rolling, weekly, daily), reset countdowns, provider health, waste-risk levels, scarcity, and data provenance (`EXACT`, `ESTIMATED`, `INFERRED`, `UNKNOWN`).
+
+### `orkestra routing explain [TASK]`
+
+Explain deterministic resource routing decisions for a task or run, exposing exact scoring formulas, waste risk bonuses, multi-window scarcity penalties, quality floor constraints, and selected profile rationale.
+
+
 ## Project setup
 
 ### `orkestra init [PATH] [--non-interactive]`
