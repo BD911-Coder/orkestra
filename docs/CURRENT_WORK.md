@@ -1,20 +1,18 @@
 # CURRENT WORK — RESUME POINTER
 
-**Current Phase:** Phase C — Provider Usage Collectors & Redacted Fixtures
-**Current Objective:** Implement provider usage collectors for Codex CLI, Claude Code, Antigravity CLI, Gemini CLI, and Unknown fallback.
+**Current Phase:** Phase D — Deterministic Adaptive Resource Router
+**Current Objective:** Implement the adaptive resource router (`src/orkestra/kernel/router.py`) with scoring algorithm, quality floor, waste-risk model, multi-window scarcity, and decision explainability.
 **Current Branch:** `feat/adaptive-ai-command-center`
-**Current HEAD:** `Checkpoint 1`
-**Last Completed Checkpoint:** Checkpoint 1 — Quota/Provider State Schema + Persistence (`src/orkestra/schemas/resource.py`, Migration 0005, Store repo methods)
+**Current HEAD:** `Checkpoint 2`
+**Last Completed Checkpoint:** Checkpoint 2 — Provider Usage Collectors & Redacted Parsers (`src/orkestra/adapters/collectors.py`, `tests/unit/test_collectors.py`)
 
 ## Active Files
-- `src/orkestra/schemas/resource.py`
-- `src/orkestra/store/migrations.py`
-- `src/orkestra/store/repo.py`
-- `tests/unit/test_resource_schemas_and_store.py`
 - `src/orkestra/adapters/collectors.py`
+- `tests/unit/test_collectors.py`
+- `src/orkestra/kernel/router.py`
 
 ## Quality Gate Status
-- **Tests currently passing:** 50/50 passed
+- **Tests currently passing:** 54/54 passed
 - **Tests currently failing:** 0
 - **Ruff / Mypy / Bandit:** Clean
 
@@ -23,11 +21,11 @@
 - **Blocker Detail:** GitHub Personal Access Token for user `BD911-Coder` lacks `createRepository` permission to automatically create a new remote repo via `gh repo create`. Local work proceeding on branch `feat/adaptive-ai-command-center`. Commits are being recorded locally.
 
 ## Uncommitted Work Summary
-- Completed Phase B (schemas, migration 0005, store methods, unit tests).
-- Ready to commit Checkpoint 1 and proceed to Phase C.
+- Completed Phase C (usage collectors, defensive parsers, collector registry, unit tests).
+- Ready to commit Checkpoint 2 and proceed to Phase D.
 
 ## Exact Next Action
-Create `src/orkestra/adapters/collectors.py` and test with redacted fixtures.
+Create `src/orkestra/kernel/router.py` and test deterministic adaptive routing scoring & explainability.
 
 ## Exact Next Verification Command
-`uv run pytest tests/unit/test_resource_schemas_and_store.py`
+`uv run pytest tests/unit/test_collectors.py`
