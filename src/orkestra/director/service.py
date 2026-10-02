@@ -51,6 +51,8 @@ class DirectorService:
         max_retries: int = 2,
         timeout_s: int = 600,
         offline: bool = False,
+        store: Store | None = None,
+        fallback_adapters: dict[str, AgentAdapter] | None = None,
     ) -> None:
         self.director_name = director_name
         #: optional (agent_name, usage) sink so preparation-phase LLM
@@ -62,54 +64,75 @@ class DirectorService:
         self.max_retries = max_retries
         self.timeout_s = timeout_s
         self.offline = offline
+        self.store = store
+        self.fallback_adapters = fallback_adapters or {}
+
 
     # ----------------------------------------------------------- plumbing
 
     async def _ask(self, prompt: str, model: type[M], task_id: str) -> M:
-        """One structured exchange with bounded schema-repair retries."""
+        """One structured exchange with bounded schema-repair retries and Director failover."""
+        adapters_chain = [(self.director_name, self.adapter)] + list(self.fallback_adapters.items())
         last_error = ""
-        for attempt in range(self.max_retries + 1):
-            instructions = prompt
-            if attempt > 0:
-                instructions = (
-                    f"{prompt}\n\nYour previous response was invalid: {last_error}\n"
-                    "Respond again with ONE valid JSON object only."
+
+        for adapter_name, adapter in adapters_chain:
+            for attempt in range(self.max_retries + 1):
+                instructions = prompt
+                if attempt > 0:
+                    instructions = (
+                        f"{prompt}\n\nYour previous response was invalid: {last_error}\n"
+                        "Respond again with ONE valid JSON object only."
+                    )
+                brief = TaskBrief(
+                    task_id=f"{task_id}-r{attempt}",
+                    run_id="director",
+                    title=f"director:{task_id}",
+                    kind=TaskKind.PLAN,
+                    instructions=instructions,
+                    cwd=str(self.work_dir),
+                    timeout_s=self.timeout_s,
+                    json_schema=model.model_json_schema(),
                 )
-            brief = TaskBrief(
-                task_id=f"{task_id}-r{attempt}",
-                run_id="director",
-                title=f"director:{task_id}",
-                kind=TaskKind.PLAN,
-                instructions=instructions,
-                cwd=str(self.work_dir),
-                timeout_s=self.timeout_s,
-                json_schema=model.model_json_schema(),
-            )
-            result = await run_invocation(
-                self.adapter.build_invocation(brief),
-                self.adapter.make_parser(brief),
-                lambda _e: None,
-            )
-            if self.usage_sink is not None and result.usage is not None:
-                self.usage_sink(self.director_name, result.usage)
-            if not result.ok:
-                last_error = f"{result.error_kind.value}: {result.error_detail[:300]}"
-                continue
-            payload = result.structured
-            if payload is None:
-                payload = extract_json_object(result.final_text)
-            if payload is None:
-                last_error = "no JSON object found in response"
-                continue
-            try:
-                return model.model_validate(payload)
-            except ValidationError as exc:
-                last_error = str(exc)[:800]
+                result = await run_invocation(
+                    adapter.build_invocation(brief),
+                    adapter.make_parser(brief),
+                    lambda _e: None,
+                )
+                if self.usage_sink is not None and result.usage is not None:
+                    self.usage_sink(adapter_name, result.usage)
+                if not result.ok:
+                    last_error = f"{result.error_kind.value}: {result.error_detail[:300]}"
+                    continue
+                payload = result.structured
+                if payload is None:
+                    payload = extract_json_object(result.final_text)
+                if payload is None:
+                    last_error = "no JSON object found in response"
+                    continue
+                try:
+                    res = model.model_validate(payload)
+                    if self.store is not None:
+                        from orkestra.schemas.common import utc_now
+                        from orkestra.schemas.resource import LogicalDirectorState
+
+                        state = LogicalDirectorState(
+                            director_id="director_primary",
+                            run_id="run_director",
+                            active_engine_profile=adapter_name,
+                            project_goal=f"Director exchange: {task_id}",
+                            updated_at=utc_now().isoformat(),
+                        )
+                        self.store.save_director_state(state)
+                    return res
+                except ValidationError as exc:
+                    last_error = str(exc)[:800]
+
         msg = (
-            f"director {self.director_name!r} failed {task_id} after "
-            f"{self.max_retries + 1} attempts: {last_error}"
+            f"director {self.director_name!r} (and failover options) failed {task_id} after "
+            f"attempts: {last_error}"
         )
         raise DirectorError(msg)
+
 
     # ---------------------------------------------------------- decisions
 
