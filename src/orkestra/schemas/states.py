@@ -12,7 +12,9 @@ from orkestra.schemas.common import RunState, TaskState
 
 TASK_TRANSITIONS: dict[TaskState, frozenset[TaskState]] = {
     TaskState.PENDING: frozenset({TaskState.READY, TaskState.CANCELLED}),
-    TaskState.READY: frozenset({TaskState.RUNNING, TaskState.CANCELLED, TaskState.BLOCKED}),
+    TaskState.READY: frozenset(
+        {TaskState.RUNNING, TaskState.CANCELLED, TaskState.BLOCKED, TaskState.WAITING_FOR_QUOTA}
+    ),
     TaskState.RUNNING: frozenset(
         {
             TaskState.VERIFYING,
@@ -20,6 +22,7 @@ TASK_TRANSITIONS: dict[TaskState, frozenset[TaskState]] = {
             TaskState.BLOCKED,
             TaskState.CANCELLED,
             TaskState.FAILED,
+            TaskState.WAITING_FOR_QUOTA,
         }
     ),
     TaskState.VERIFYING: frozenset(
@@ -38,6 +41,7 @@ TASK_TRANSITIONS: dict[TaskState, frozenset[TaskState]] = {
         {TaskState.DONE, TaskState.READY, TaskState.BLOCKED, TaskState.CANCELLED}
     ),
     TaskState.BLOCKED: frozenset({TaskState.READY, TaskState.FAILED, TaskState.CANCELLED}),
+    TaskState.WAITING_FOR_QUOTA: frozenset({TaskState.READY, TaskState.CANCELLED, TaskState.FAILED}),
     TaskState.DONE: frozenset(),
     TaskState.FAILED: frozenset({TaskState.READY}),
     TaskState.CANCELLED: frozenset(),
@@ -64,6 +68,7 @@ RUN_TRANSITIONS: dict[RunState, frozenset[RunState]] = {
         {
             RunState.PAUSED,
             RunState.WAITING_HUMAN,
+            RunState.WAITING_FOR_QUOTA,
             RunState.COMPLETE,
             RunState.FAILED,
             RunState.CANCELLED,
@@ -73,10 +78,12 @@ RUN_TRANSITIONS: dict[RunState, frozenset[RunState]] = {
     RunState.WAITING_HUMAN: frozenset(
         {RunState.RUNNING, RunState.PLANNING, RunState.FAILED, RunState.CANCELLED}
     ),
+    RunState.WAITING_FOR_QUOTA: frozenset({RunState.RUNNING, RunState.CANCELLED, RunState.FAILED}),
     RunState.COMPLETE: frozenset(),
     RunState.FAILED: frozenset({RunState.RUNNING}),  # resume after fix
     RunState.CANCELLED: frozenset(),
 }
+
 
 
 def can_transition_task(current: TaskState, new: TaskState) -> bool:

@@ -21,6 +21,7 @@ class RunState(StrEnum):
     RUNNING = "running"
     PAUSED = "paused"
     WAITING_HUMAN = "waiting_human"
+    WAITING_FOR_QUOTA = "waiting_for_quota"
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -37,8 +38,10 @@ class TaskState(StrEnum):
     INTEGRATING = "integrating"
     DONE = "done"
     BLOCKED = "blocked"
+    WAITING_FOR_QUOTA = "waiting_for_quota"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
 
 
 class AttemptState(StrEnum):

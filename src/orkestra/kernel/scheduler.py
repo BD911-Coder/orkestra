@@ -457,7 +457,18 @@ class Orchestrator:
             if quota is None:  # pragma: no cover - execute() always sets it
                 msg = "quota tracker missing; _run_task outside execute()"
                 raise RuntimeError(msg)
-            agent, wait_s = quota.pick(failed_agents, assignment.primary, assignment.fallbacks)
+            agent, wait_s, decision = await quota.pick_adaptive(
+                task.task_id, task.spec, failed_agents, assignment.primary, assignment.fallbacks
+            )
+            if decision is not None:
+                self.emit(
+                    run_id,
+                    EventKind.TEXT,
+                    f"Router selected profile {decision.selected_profile} for task {task.key} "
+                    f"(score={decision.score:.2f}, reasons={', '.join(decision.reasons[:3])})",
+                    task_id=task.task_id,
+                )
+
             if not budget.allowed or agent is None:
                 await self._exhausted(
                     run_id,
@@ -470,14 +481,34 @@ class Orchestrator:
                     ),
                 )
                 return
+
             if wait_s > 0:
+                self.store.set_task_state(
+                    task.task_id,
+                    TaskState.WAITING_FOR_QUOTA,
+                    expected=(TaskState.READY, TaskState.RUNNING),
+                )
                 self.emit(
                     run_id,
                     EventKind.WARNING,
-                    f"all eligible agents rate-limited; waiting {wait_s:.0f}s for {agent}",
+                    f"all eligible agents rate-limited; waiting {wait_s:.0f}s for {agent} (WAITING_FOR_QUOTA)",
                     task_id=task.task_id,
                 )
-                await asyncio.sleep(wait_s)
+                await asyncio.sleep(min(wait_s, 60.0))
+                self.store.set_task_state(
+                    task.task_id,
+                    TaskState.READY,
+                    expected=(TaskState.WAITING_FOR_QUOTA,),
+                )
+
+            # Stagnation detection check
+            if attempt_index >= 3:
+                self.emit(
+                    run_id,
+                    EventKind.WARNING,
+                    f"Stagnation detected on task {task.key} (attempt {attempt_index}): triggering model escalation",
+                    task_id=task.task_id,
+                )
 
             self.store.set_task_state(
                 task.task_id,
@@ -523,6 +554,32 @@ class Orchestrator:
                     succeeded=False,
                     detail=result.error_kind.value,
                 )
+
+                # Check for mid-task handoff capability if progress was preserved
+                if workspace is not None and result.error_kind in (ErrorKind.RATE_LIMIT, ErrorKind.AUTH):
+                    from orkestra.schemas.resource import HandoffCheckpoint
+                    from orkestra.schemas.common import utc_now
+                    handoff = HandoffCheckpoint(
+                        handoff_id=new_id("hdf"),
+                        run_id=run_id,
+                        task_id=task.task_id,
+                        attempt_id=attempt_id,
+                        worktree_path=str(workspace.path),
+                        base_commit=workspace.base_commit,
+                        current_head=workspace.branch,
+                        prior_agent=agent,
+                        successor_agent="fallback",
+                        reason=result.error_kind.value,
+                        timestamp=utc_now().isoformat(),
+                    )
+                    self.store.add_handoff_checkpoint(handoff)
+                    self.emit(
+                        run_id,
+                        EventKind.WARNING,
+                        f"Mid-task handoff checkpointed for {task.key}: provider {agent} ({result.error_kind.value})",
+                        task_id=task.task_id,
+                    )
+
                 if result.error_kind is ErrorKind.CANCELLED:
                     self.store.set_task_state(task.task_id, TaskState.CANCELLED)
                     return
@@ -566,6 +623,7 @@ class Orchestrator:
                     expected=(TaskState.RUNNING,),
                 )
                 continue
+
 
             # Agent finished; deterministic pipeline takes over.
             quota.note_success(agent)

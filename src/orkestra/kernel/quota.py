@@ -20,6 +20,11 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from orkestra.adapters.collectors import CollectorRegistry
+from orkestra.kernel.router import ResourceRouter
+from orkestra.schemas.resource import ProviderHealth, ResourceState, RoutingDecision
+from orkestra.schemas.task import TaskSpec
+
 if TYPE_CHECKING:
     from orkestra.schemas.config import ProjectConfig
     from orkestra.store import Store
@@ -35,8 +40,11 @@ class QuotaTracker:
     cooldown_base_s: float = 60.0
     cooldown_factor: float = 2.0
     cooldown_max_s: float = 900.0
+    router: ResourceRouter = field(default_factory=ResourceRouter)
+    collectors: CollectorRegistry = field(default_factory=CollectorRegistry)
     _cooldown_until: dict[str, float] = field(default_factory=dict)
     _consecutive_limits: dict[str, int] = field(default_factory=dict)
+
 
     # ------------------------------------------------------------ budgets
 
@@ -109,3 +117,41 @@ class QuotaTracker:
                 return agent, 0.0
         soonest = min(candidates, key=self.cooldown_remaining)
         return soonest, self.cooldown_remaining(soonest)
+
+    async def pick_adaptive(
+        self,
+        task_id: str,
+        spec: TaskSpec,
+        failed_agents: list[str],
+        primary: str,
+        fallbacks: list[str],
+    ) -> tuple[str | None, float, RoutingDecision | None]:
+        """Adaptive resource routing: uses collectors & router scoring to pick agent/profile."""
+        snapshots = await self.collectors.collect_all(self.store, self.run_id)
+
+        # Update cooling down status in snapshots
+        for name, snap in snapshots.items():
+            if self.cooling_down(name):
+                snap.state = ResourceState.COOLDOWN
+
+        decision = self.router.select_best_profile(
+            task_id=task_id,
+            run_id=self.run_id,
+            spec=spec,
+            snapshots=snapshots,
+            failed_agents=failed_agents,
+            store=self.store,
+        )
+
+        selected_profile = self.router.get_profile(decision.selected_profile)
+        selected_agent = selected_profile.provider if selected_profile else primary
+
+        if selected_agent in failed_agents or self.budget_exhausted(selected_agent):
+            fallback_agent, wait = self.pick(failed_agents, primary, fallbacks)
+            return fallback_agent, wait, decision
+
+        if self.cooling_down(selected_agent):
+            return selected_agent, self.cooldown_remaining(selected_agent), decision
+
+        return selected_agent, 0.0, decision
+
