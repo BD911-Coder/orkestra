@@ -18,10 +18,17 @@ from orkestra.schemas.agent import AgentEvent, AgentResult, Usage
 from orkestra.schemas.capability import CapabilityObservation
 from orkestra.schemas.common import AttemptState, RunState, TaskState, utc_now
 from orkestra.schemas.decision import HumanDecision
+from orkestra.schemas.resource import (
+    HandoffCheckpoint,
+    LogicalDirectorState,
+    ProviderUsageSnapshot,
+    RoutingDecision,
+)
 from orkestra.schemas.states import can_transition_task
 from orkestra.schemas.task import Assignment, TaskSpec
 from orkestra.store.db import Database
 from orkestra.verify.record import VerificationRecord
+
 
 
 def _now() -> str:
@@ -757,3 +764,118 @@ class Store:
             (run_id,),
         )
         return [dict(r) for r in rows]
+
+    # ------------------------------------------------ provider resource snapshots
+
+    def add_provider_snapshot(self, snapshot: ProviderUsageSnapshot) -> int:
+        with self.db.tx() as conn:
+            cur = conn.execute(
+                "INSERT INTO provider_snapshots (provider, account_profile, health, state, payload, observed_at)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    snapshot.provider,
+                    snapshot.account_profile,
+                    snapshot.health.value if hasattr(snapshot.health, "value") else str(snapshot.health),
+                    snapshot.state.value if hasattr(snapshot.state, "value") else str(snapshot.state),
+                    snapshot.model_dump_json(),
+                    snapshot.observed_at or _now(),
+                ),
+            )
+            return int(cur.lastrowid or 0)
+
+    def latest_provider_snapshots(self) -> dict[str, ProviderUsageSnapshot]:
+        rows = self.db.query(
+            "SELECT payload FROM provider_snapshots s1 WHERE snapshot_id = ("
+            " SELECT MAX(snapshot_id) FROM provider_snapshots s2 WHERE s2.provider = s1.provider"
+            " )"
+        )
+        result: dict[str, ProviderUsageSnapshot] = {}
+        for r in rows:
+            snap = ProviderUsageSnapshot.model_validate_json(r["payload"])
+            result[snap.provider] = snap
+        return result
+
+    # -------------------------------------------------- routing decisions
+
+    def add_routing_decision(self, decision: RoutingDecision) -> None:
+        with self.db.tx() as conn:
+            conn.execute(
+                "INSERT INTO routing_decisions (decision_id, run_id, task_id, selected_profile, score, payload, timestamp)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    decision.decision_id,
+                    decision.run_id,
+                    decision.task_id,
+                    decision.selected_profile,
+                    decision.score,
+                    decision.model_dump_json(),
+                    decision.timestamp or _now(),
+                ),
+            )
+
+    def routing_decisions_for_run(self, run_id: str, limit: int = 50) -> list[RoutingDecision]:
+        rows = self.db.query(
+            "SELECT payload FROM routing_decisions WHERE run_id = ? ORDER BY timestamp DESC LIMIT ?",
+            (run_id, limit),
+        )
+        return [RoutingDecision.model_validate_json(r["payload"]) for r in reversed(rows)]
+
+    def latest_routing_decision(self, run_id: str, task_id: str) -> RoutingDecision | None:
+        row = self.db.query_one(
+            "SELECT payload FROM routing_decisions WHERE run_id = ? AND task_id = ? ORDER BY timestamp DESC LIMIT 1",
+            (run_id, task_id),
+        )
+        return RoutingDecision.model_validate_json(row["payload"]) if row else None
+
+    # -------------------------------------------------- handoffs
+
+    def add_handoff_checkpoint(self, checkpoint: HandoffCheckpoint) -> None:
+        with self.db.tx() as conn:
+            conn.execute(
+                "INSERT INTO handoff_checkpoints (handoff_id, run_id, task_id, attempt_id, prior_agent, successor_agent, reason, payload, timestamp)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    checkpoint.handoff_id,
+                    checkpoint.run_id,
+                    checkpoint.task_id,
+                    checkpoint.attempt_id,
+                    checkpoint.prior_agent,
+                    checkpoint.successor_agent,
+                    checkpoint.reason,
+                    checkpoint.model_dump_json(),
+                    checkpoint.timestamp or _now(),
+                ),
+            )
+
+    def handoffs_for_task(self, run_id: str, task_id: str) -> list[HandoffCheckpoint]:
+        rows = self.db.query(
+            "SELECT payload FROM handoff_checkpoints WHERE run_id = ? AND task_id = ? ORDER BY timestamp ASC",
+            (run_id, task_id),
+        )
+        return [HandoffCheckpoint.model_validate_json(r["payload"]) for r in rows]
+
+    # -------------------------------------------------- director state
+
+    def save_director_state(self, state: LogicalDirectorState) -> None:
+        with self.db.tx() as conn:
+            conn.execute(
+                "INSERT INTO director_states (director_id, run_id, active_engine_profile, payload, updated_at)"
+                " VALUES (?, ?, ?, ?, ?)"
+                " ON CONFLICT(director_id) DO UPDATE SET active_engine_profile = excluded.active_engine_profile,"
+                " payload = excluded.payload, updated_at = excluded.updated_at",
+                (
+                    state.director_id,
+                    state.run_id,
+                    state.active_engine_profile,
+                    state.model_dump_json(),
+                    state.updated_at or _now(),
+                ),
+            )
+
+    def get_director_state(self, run_id: str) -> LogicalDirectorState | None:
+        row = self.db.query_one(
+            "SELECT payload FROM director_states WHERE run_id = ? ORDER BY updated_at DESC LIMIT 1",
+            (run_id,),
+        )
+        return LogicalDirectorState.model_validate_json(row["payload"]) if row else None
+

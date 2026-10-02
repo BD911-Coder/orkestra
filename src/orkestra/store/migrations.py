@@ -179,4 +179,52 @@ MIGRATIONS: list[str] = [
         created_at TEXT NOT NULL
     );
     """,
+    # 0005 - adaptive multi-ai command center: provider resource snapshots, routing decisions, handoffs, director states
+    """
+    CREATE TABLE provider_snapshots (
+        snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        provider TEXT NOT NULL,
+        account_profile TEXT NOT NULL DEFAULT 'default',
+        health TEXT NOT NULL,
+        state TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        observed_at TEXT NOT NULL
+    );
+    CREATE INDEX idx_provider_snapshots_provider ON provider_snapshots(provider, observed_at);
+
+    CREATE TABLE routing_decisions (
+        decision_id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        selected_profile TEXT NOT NULL,
+        score REAL NOT NULL,
+        payload TEXT NOT NULL,
+        timestamp TEXT NOT NULL
+    );
+    CREATE INDEX idx_routing_decisions_run_task ON routing_decisions(run_id, task_id);
+
+    CREATE TABLE handoff_checkpoints (
+        handoff_id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        attempt_id TEXT NOT NULL,
+        prior_agent TEXT NOT NULL,
+        successor_agent TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        timestamp TEXT NOT NULL
+    );
+    CREATE INDEX idx_handoff_checkpoints_task ON handoff_checkpoints(run_id, task_id);
+
+    CREATE TABLE director_states (
+        director_id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        active_engine_profile TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+    CREATE INDEX idx_director_states_run ON director_states(run_id);
+    """,
 ]
+
+

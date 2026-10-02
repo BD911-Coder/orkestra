@@ -1,34 +1,33 @@
 # CURRENT WORK — RESUME POINTER
 
-**Current Phase:** Phase A — Bootstrap & Continuity System
-**Current Objective:** Complete Phase A (continuity docs, provider research, initial git commit) and transition to Phase B (schemas & persistence).
+**Current Phase:** Phase C — Provider Usage Collectors & Redacted Fixtures
+**Current Objective:** Implement provider usage collectors for Codex CLI, Claude Code, Antigravity CLI, Gemini CLI, and Unknown fallback.
 **Current Branch:** `feat/adaptive-ai-command-center`
-**Current HEAD:** `INITIAL` (about to create checkpoint 0 commit)
-**Last Completed Checkpoint:** None (Bootstrap phase)
+**Current HEAD:** `Checkpoint 1`
+**Last Completed Checkpoint:** Checkpoint 1 — Quota/Provider State Schema + Persistence (`src/orkestra/schemas/resource.py`, Migration 0005, Store repo methods)
 
 ## Active Files
-- `AGENTS.md`
-- `docs/ORKestra_EVOLUTION_SPEC.md`
-- `docs/ORKestra_EXECUTION_PLAN.md`
-- `docs/CURRENT_WORK.md`
-- `docs/research/PROVIDER_QUOTA_AND_USAGE_RESEARCH_2026-10.md`
-- `docs/development/ORKestra_EVOLUTION_EVIDENCE.md`
+- `src/orkestra/schemas/resource.py`
+- `src/orkestra/store/migrations.py`
+- `src/orkestra/store/repo.py`
+- `tests/unit/test_resource_schemas_and_store.py`
+- `src/orkestra/adapters/collectors.py`
 
 ## Quality Gate Status
-- **Tests currently passing:** 48/48 passed
+- **Tests currently passing:** 50/50 passed
 - **Tests currently failing:** 0
-- **Ruff / Mypy / Bandit:** Clean baseline
+- **Ruff / Mypy / Bandit:** Clean
 
 ## Known Blockers & Push Status
 - **GitHub Push Status:** `PUSH_PENDING`
 - **Blocker Detail:** GitHub Personal Access Token for user `BD911-Coder` lacks `createRepository` permission to automatically create a new remote repo via `gh repo create`. Local work proceeding on branch `feat/adaptive-ai-command-center`. Commits are being recorded locally.
 
 ## Uncommitted Work Summary
-- Created continuity documents: `AGENTS.md`, `docs/ORKestra_EVOLUTION_SPEC.md`, `docs/ORKestra_EXECUTION_PLAN.md`, `docs/CURRENT_WORK.md`.
-- Next: Write provider usage research document `docs/research/PROVIDER_QUOTA_AND_USAGE_RESEARCH_2026-10.md` and evidence doc `docs/development/ORKestra_EVOLUTION_EVIDENCE.md`.
+- Completed Phase B (schemas, migration 0005, store methods, unit tests).
+- Ready to commit Checkpoint 1 and proceed to Phase C.
 
 ## Exact Next Action
-Create `docs/research/PROVIDER_QUOTA_AND_USAGE_RESEARCH_2026-10.md` and commit Checkpoint 0.
+Create `src/orkestra/adapters/collectors.py` and test with redacted fixtures.
 
 ## Exact Next Verification Command
-`uv run pytest`
+`uv run pytest tests/unit/test_resource_schemas_and_store.py`
