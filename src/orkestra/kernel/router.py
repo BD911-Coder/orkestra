@@ -24,6 +24,7 @@ from orkestra.schemas.resource import (
 
 if TYPE_CHECKING:
     from orkestra.kernel.performance import PerformanceIntelligenceEngine
+    from orkestra.schemas.resources_v2 import MultiWindowQuotaProfile
     from orkestra.schemas.task import TaskSpec
     from orkestra.store import Store
 
@@ -185,6 +186,7 @@ class ResourceRouter:
         failed_agents: list[str] | None = None,
         store: Store | None = None,
         allowed_agents: list[str] | None = None,
+        multi_window_profiles: dict[str, MultiWindowQuotaProfile] | None = None,
     ) -> RoutingDecision:
         """Scores candidate profiles and returns an auditable RoutingDecision."""
         failed_agents = failed_agents or []
@@ -253,6 +255,26 @@ class ResourceRouter:
             if scarcity_penalty > 0.1:
                 reasons.append(f"scarcity_penalty:-{scarcity_penalty:.2f}")
 
+            # V2 Multi-Window Quota Evaluation (Reset pressure & composite headroom)
+            throttle_penalty = 0.0
+            if multi_window_profiles and p.provider in multi_window_profiles:
+                mw_prof = multi_window_profiles[p.provider]
+                if mw_prof.composite_reset_pressure > 0.1:
+                    rp_bonus = mw_prof.composite_reset_pressure * self.policy.waste_risk_weight
+                    waste_bonus = max(waste_bonus, rp_bonus)
+                    reasons.append(f"v2_reset_pressure_bonus:+{rp_bonus:.2f}")
+                if mw_prof.composite_headroom < 0.2:
+                    mw_scarcity = 1.0 - (mw_prof.composite_headroom / 0.2)
+                    scarcity = max(scarcity, mw_scarcity)
+                    scarcity_penalty = max(
+                        scarcity_penalty,
+                        mw_scarcity * self.policy.scarcity_penalty_weight,
+                    )
+                    reasons.append(f"v2_scarcity_penalty:-{scarcity_penalty:.2f}")
+                if mw_prof.throttle_recommended:
+                    throttle_penalty = 2.0
+                    reasons.append("v2_throttle_burn_velocity_exceeded:-2.00")
+
             # Load & Health Penalties
             load_penalty = 0.0
             if snap and snap.active_concurrency >= snap.max_concurrency:
@@ -282,6 +304,7 @@ class ResourceRouter:
                 + fit_score
                 + waste_bonus
                 - scarcity_penalty
+                - throttle_penalty
                 - load_penalty
                 - cooldown_penalty
                 - failed_penalty

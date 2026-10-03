@@ -17,12 +17,12 @@ This document tracks the incremental engineering milestones, verification criter
   - [x] Implement atomic versioned checkpointing and historical replacement in `src/orkestra/kernel/checkpoints.py`
   - [x] Implement append-only decision ledger with revision trees in `src/orkestra/schemas/resource.py`
   - [x] Write unit & integration tests in `tests/unit/test_artifacts_and_checkpoints.py`
-- [ ] **Phase N — Resource Intelligence Engine V2**
-  - [ ] Implement multi-window quota evaluation (5h, daily, weekly, monthly) in `src/orkestra/kernel/resources_v2.py`
-  - [ ] Implement quota provenance, confidence tracking (`UNKNOWN != ABUNDANT`), and headroom formulas
-  - [ ] Implement reset pressure affinity and burn velocity projections
-  - [ ] Integrate multi-window scoring into `ResourceRouter`
-  - [ ] Write tests in `tests/unit/test_resources_v2.py`
+- [x] **Phase N — Resource Intelligence Engine V2**
+  - [x] Implement multi-window quota evaluation (5h, daily, weekly, monthly) in `src/orkestra/kernel/resources_v2.py`
+  - [x] Implement quota provenance, confidence tracking (`UNKNOWN != ABUNDANT`), and headroom formulas
+  - [x] Implement reset pressure affinity and burn velocity projections
+  - [x] Integrate multi-window scoring into `ResourceRouter`
+  - [x] Write tests in `tests/unit/test_resources_v2.py`
 - [ ] **Phase O — Session, Context & Execution Continuity**
   - [ ] Implement session continuity model (cache affinity, context affinity, worktree state) in `src/orkestra/kernel/continuity.py`
   - [ ] Implement switching cost penalties for cold session handoffs
