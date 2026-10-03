@@ -1,11 +1,11 @@
 # CURRENT WORK — RESUME POINTER
 
-**Current Phase:** Phase K — General-Purpose Capability & Performance Operating System (Completed & Remote-Verified)
-**Current Objective:** Remote Topology & Repository Integrity Verified. Ready for next directives.
-**Current Branch:** `feat/adaptive-ai-command-center`
-**Tracking Remote:** `origin/feat/adaptive-ai-command-center`
-**Current HEAD:** `45ef10d132a57b986704b74608871945b5d963e4`
-**Remote HEAD:** `45ef10d132a57b986704b74608871945b5d963e4`
+**Current Phase:** Phase L — Reference Architecture Mining & Provenance (Completed) -> Phase M — Typed Execution Artifacts & Checkpoint Governance
+**Current Objective:** Checkpoint 17 — Implement Phase L documentation and begin Phase M (Canonical Typed Artifacts and Checkpoint Governance).
+**Current Branch:** `feat/performance-os-v2`
+**Tracking Remote:** `origin/feat/performance-os-v2`
+**Current HEAD:** Pending Checkpoint 17 commit (`docs(mining): complete Phase L reference architecture mining and V2 master roadmap`)
+**Last Completed Checkpoint:** Checkpoint 16 — Comprehensive Evidence Documentation & Quality Gates Verification (`45ef10d`)
 
 ## Remote Topology
 - **Origin (Writable Fork):** `https://github.com/BD911-Coder/orkestra.git`
@@ -13,10 +13,13 @@
 - **GitHub Auth User:** `BD911-Coder` (Admin on `origin`)
 
 ## Active Files
-- `docs/development/ORKestra_EVOLUTION_EVIDENCE.md`
-- `docs/ORKestra_EXECUTION_PLAN.md` (All phases A through K verified and checked)
-- `README.md` (Verified 636 tests)
-- `docs/CURRENT_WORK.md`
+- `docs/research/REFERENCE_PROVENANCE.md` (Phase L)
+- `docs/research/REFERENCE_ARCHITECTURE_MINING_2026-10.md` (Phase L)
+- `docs/ORKestra_V2_PERFORMANCE_OS_SPEC.md` (Phase L)
+- `docs/ORKestra_V2_EXECUTION_PLAN.md` (Phase L)
+- `src/orkestra/schemas/artifacts.py` (upcoming Phase M)
+- `src/orkestra/kernel/artifacts.py` (upcoming Phase M)
+- `src/orkestra/kernel/checkpoints.py` (upcoming Phase M)
 
 ## Quality Gate Status
 - **Ruff check:** Clean (`All checks passed!`)
@@ -29,26 +32,18 @@
 - **Build:** Success (`dist/orkestra_runtime-0.5.5-py3-none-any.whl`)
 
 ## Roadmap Completion Status
-- [x] Phase A — Bootstrap & Research
-- [x] Phase B — Resource & Routing Schemas & Persistence
-- [x] Phase C — Provider Usage Collectors & Redacted Fixtures
-- [x] Phase D — Deterministic Adaptive Resource Router
-- [x] Phase E — Scheduler Integration & Handoff Infrastructure
-- [x] Phase F — Logical Persistent Director & Failover
-- [x] Phase G — Command-Center Terminal UI Redesign
-- [x] Phase H — CLI Surface, Configuration & Overrides
-- [x] Phase I — Hardening, Verification & Evidence
-- [x] Phase J — Native Multi-Agent Policy & Windows Runtime Hardening
-- [x] Phase K — General-Purpose Capability & Performance Operating System (K1–K12)
+- [x] Phase A–K Foundation (Completed & Remote-Verified)
+- [x] Phase L — Reference Architecture Mining & Provenance
+- [ ] Phase M — Typed Execution Artifacts & Checkpoint Governance
+- [ ] Phase N — Resource Intelligence Engine V2
+- [ ] Phase O — Session, Context & Execution Continuity
+- [ ] Phase P — Swarm & Execution Topology Intelligence
+- [ ] Phase Q — Performance Intelligence V2
+- [ ] Phase R — Event Bus, Observability, Replay & Command Center V2
+- [ ] Phase S — Governance, Hardening & Final Acceptance
 
-## Remote Push Verification Status
-- **GitHub Push Status:** `PUSHED_VERIFIED`
-- **Remote Verified URL:** `https://github.com/BD911-Coder/orkestra/tree/feat/adaptive-ai-command-center`
-- **Verified Commits on Remote:**
-  - `0ed5dc5d785e80334a8e9f289c2e3f9a78b2fe20`
-  - `30096b0151861dee3b875b4ef70e849bac9a8420`
-  - `22cf9bd2021da3213414f2f7432696c22f4c3163`
-  - `45ef10d132a57b986704b74608871945b5d963e4`
+## Exact Next Action
+Commit Checkpoint 17 (Phase L) and implement Phase M (Canonical Typed Artifacts in `schemas/artifacts.py` and Checkpoint Governance in `kernel/checkpoints.py`).
 
 ## Exact Next Verification Command
 `uv run pytest tests/unit/test_readme_claims.py -q`
