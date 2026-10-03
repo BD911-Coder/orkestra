@@ -3,8 +3,8 @@
 **Current Phase:** Phase J — Native Multi-Agent Policy & Full Hardening Verification
 **Current Objective:** Run full verification suite (ruff, format, mypy, bandit, pip-audit, full pytest suite with coverage >= 80%, wheel build).
 **Current Branch:** `feat/adaptive-ai-command-center`
-**Current HEAD:** `Checkpoint 8`
-**Last Completed Checkpoint:** Checkpoint 8 — Native Multi-Agent Policy & Windows Compatibility Hardening
+**Current HEAD:** `175de78`
+**Last Completed Checkpoint:** Checkpoint 8 — Native Multi-Agent Policy & Windows Compatibility Hardening (`175de78`)
 
 ## Active Files
 - `src/orkestra/schemas/config.py`
