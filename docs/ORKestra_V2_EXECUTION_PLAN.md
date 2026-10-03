@@ -39,13 +39,13 @@ This document tracks the incremental engineering milestones, verification criter
   - [x] Implement counterfactual routing evaluation in `src/orkestra/kernel/counterfactual.py`
   - [x] Implement failure classification and stagnation loop detection in `src/orkestra/kernel/failure.py`
   - [x] Write tests in `tests/unit/test_performance_v2.py`
-- [ ] **Phase R — Event Bus, Observability, Replay & Command Center V2**
-  - [ ] Implement structured neutral event hierarchy with correlation IDs in `src/orkestra/schemas/events_v2.py`
-  - [ ] Implement chronological run replay synthesizer and CLI `orkestra replay <run_id>` in `src/orkestra/report/replay.py` and `src/orkestra/cli/replay.py`
-  - [ ] Enhance Textual Command Center (`src/orkestra/cli/watch.py`) to render topology cards and live event stream
-  - [ ] Write tests in `tests/unit/test_replay_and_observability.py`
-- [ ] **Phase S — Governance, Hardening & Final Acceptance**
-  - [ ] Implement deterministic human approval gates for sensitive effect classes (`SE3`/`SE4`)
-  - [ ] Execute complete 33-scenario integration test matrix in `tests/integration/test_v2_scenario_matrix.py`
-  - [ ] Run full quality gate suite (ruff check/format, mypy strict, bandit, pip-audit, pytest with coverage >= 80%, uv build)
-  - [ ] Document final empirical evidence in `docs/development/ORKestra_V2_EVOLUTION_EVIDENCE.md`
+- [x] **Phase R — Event Bus, Observability, Replay & Command Center V2**
+  - [x] Implement structured neutral event hierarchy with correlation IDs in `src/orkestra/schemas/events_v2.py`
+  - [x] Implement chronological run replay synthesizer and CLI `orkestra replay <run_id>` in `src/orkestra/report/replay.py` and `src/orkestra/cli/replay.py`
+  - [x] Enhance Textual Command Center (`src/orkestra/cli/watch.py`) to render topology cards and live event stream
+  - [x] Write tests in `tests/unit/test_replay_and_observability.py`
+- [x] **Phase S — Governance, Hardening & Final Acceptance**
+  - [x] Implement deterministic human approval gates for sensitive effect classes (`SE3`/`SE4`)
+  - [x] Execute complete 33-scenario integration test matrix in `tests/integration/test_v2_scenario_matrix.py`
+  - [x] Run full quality gate suite (ruff check/format, mypy strict, bandit, pip-audit, pytest with coverage >= 80%, uv build)
+  - [x] Document final empirical evidence in `docs/development/ORKestra_V2_EVOLUTION_EVIDENCE.md`
