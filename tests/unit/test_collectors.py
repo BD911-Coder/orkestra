@@ -5,18 +5,13 @@ from __future__ import annotations
 import pytest
 
 from orkestra.adapters.collectors import (
-    AntigravityUsageCollector,
-    ClaudeUsageCollector,
-    CodexUsageCollector,
     CollectorRegistry,
-    GeminiCliUsageCollector,
-    UnknownUsageCollector,
     parse_antigravity_models_output,
     parse_claude_usage_output,
     parse_codex_status_output,
 )
 from orkestra.schemas.common import utc_now
-from orkestra.schemas.resource import QuotaConfidence, QuotaSource
+from orkestra.schemas.resource import QuotaConfidence
 from orkestra.store import Database, Store
 
 

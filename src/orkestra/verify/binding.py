@@ -48,6 +48,7 @@ import hashlib
 import os
 import shlex
 import shutil
+import subprocess
 import tempfile
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -193,17 +194,28 @@ class BindingProof:
 # --------------------------------------------------------------- helpers
 
 
+def _spawn_kwargs() -> dict[str, object]:
+    """Platform-appropriate child-process group/session settings."""
+    if os.name == "nt":
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    return {"start_new_session": True}
+
+
 async def _capture(argv: list[str], cwd: Path, env: dict[str, str]) -> tuple[int, str]:
     """Run argv without a shell; return (exit code, stdout)."""
+    # Resolve the executable so Windows CreateProcess finds it (it requires
+    # a full path; bare names from shlex.split may not be on the env PATH).
+    resolved = shutil.which(argv[0], path=env.get("PATH")) if argv else None
+    actual_argv = [resolved or argv[0], *argv[1:]] if argv else argv
     try:
         proc = await asyncio.create_subprocess_exec(
-            *argv,
+            *actual_argv,
             cwd=str(cwd),
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
-            start_new_session=True,
+            **_spawn_kwargs(),  # type: ignore[arg-type]
         )
     except OSError:
         return -1, ""
@@ -324,10 +336,13 @@ def _python_argv(commands: Sequence[str]) -> list[str] | None:
             continue
         if not argv:
             continue
-        exe = PurePosixPath(argv[0]).name
-        if exe.startswith("python"):
+        # Use os.path.basename so Windows paths with backslashes (e.g.
+        # C:\...\python.exe) are handled correctly — PurePosixPath would
+        # treat the entire path as a single component with no slashes.
+        exe_stem = Path(argv[0]).stem.lower()
+        if exe_stem.startswith("python"):
             return [argv[0], "-c"]
-        if exe == "uv" and argv[1:2] == ["run"]:
+        if exe_stem == "uv" and argv[1:2] == ["run"]:
             # `uv run` re-resolves the environment for the current directory,
             # which is the mitigation as well as the probe.
             return [argv[0], "run", "python", "-c"]

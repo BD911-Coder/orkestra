@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class QuotaSource(str, Enum):
+class QuotaSource(StrEnum):
     OFFICIAL_CLI = "official_cli"
     OFFICIAL_SDK = "official_sdk"
     STRUCTURED_PROVIDER_OUTPUT = "structured_provider_output"
@@ -19,14 +19,14 @@ class QuotaSource(str, Enum):
     UNKNOWN = "unknown"
 
 
-class QuotaConfidence(str, Enum):
+class QuotaConfidence(StrEnum):
     EXACT = "exact"
     ESTIMATED = "estimated"
     INFERRED = "inferred"
     UNKNOWN = "unknown"
 
 
-class ProviderHealth(str, Enum):
+class ProviderHealth(StrEnum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     RATE_LIMITED = "rate_limited"
@@ -35,7 +35,7 @@ class ProviderHealth(str, Enum):
     UNKNOWN = "unknown"
 
 
-class ResourceState(str, Enum):
+class ResourceState(StrEnum):
     ACTIVE = "active"
     IDLE = "idle"
     RESERVED = "reserved"

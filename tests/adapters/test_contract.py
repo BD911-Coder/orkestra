@@ -21,9 +21,11 @@ async def test_fake_adapter_passes_contract(tmp_path: Path) -> None:
 
 
 async def test_external_detect_rejects_non_protocol_command(tmp_path: Path) -> None:
+    import sys
+
     from orkestra.adapters.external import ExternalAdapter
 
-    adapter = ExternalAdapter(command=["echo", "hello"])
+    adapter = ExternalAdapter(command=[sys.executable, "-c", "print('hello')"])
     info = await adapter.detect()
     assert not info.available
     assert "handshake" in info.detail

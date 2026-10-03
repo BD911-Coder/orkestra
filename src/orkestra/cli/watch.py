@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, ClassVar
 from textual.app import App as TextualApp
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import DataTable, Footer, Header, RichLog, Static, Tree
 
 from orkestra.cli.text import clip
@@ -38,9 +38,9 @@ _STATE_STYLE = {
 def _render_quota_bar(ratio: float | None, width: int = 8) -> str:
     if ratio is None:
         return "[dim]░░░░░░░░ ?%[/dim]"
-    filled = int(round(ratio * width))
+    filled = round(ratio * width)
     bar = "█" * filled + "░" * (width - filled)
-    pct = int(round(ratio * 100))
+    pct = round(ratio * 100)
     color = "green" if ratio > 0.4 else "yellow" if ratio > 0.15 else "red"
     return f"[{color}]{bar} {pct}%[/{color}]"
 
@@ -51,13 +51,17 @@ class WatchApp(TextualApp[None]):
     TITLE = "ORKESTRA COMMAND CENTER"
     CSS = """
     Screen { background: $background; }
-    #summary_bar { height: 3; padding: 0 1; background: $surface; border-bottom: solid $primary; }
-    #resource_strip { height: 7; padding: 0 1; background: $surface-darken-1; border-bottom: solid $secondary; }
+    #summary { height: 3; padding: 0 1; background: $surface; border-bottom: solid $primary; }
+    #resource_strip {
+        height: 7; padding: 0 1; background: $surface-darken-1; border-bottom: solid $secondary;
+    }
     #middle_pane { height: 1fr; }
     #agent_tree_panel { width: 35%; height: 100%; border-right: solid $primary; padding: 0 1; }
     #task_dag_panel { width: 65%; height: 100%; }
-    #decisions_stream { height: 7; background: $surface; border-top: solid $secondary; padding: 0 1; }
-    #events_panel { height: 9; border-top: solid $primary; }
+    #decisions_stream {
+        height: 7; background: $surface; border-top: solid $secondary; padding: 0 1;
+    }
+    #events { height: 9; border-top: solid $primary; }
     """
 
     BINDINGS: ClassVar = [
@@ -77,7 +81,7 @@ class WatchApp(TextualApp[None]):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Vertical():
-            yield Static(id="summary_bar")
+            yield Static(id="summary")
             yield Static(id="resource_strip")
             with Horizontal(id="middle_pane"):
                 with Vertical(id="agent_tree_panel"):
@@ -86,7 +90,7 @@ class WatchApp(TextualApp[None]):
                 with Vertical(id="task_dag_panel"):
                     yield DataTable[str](id="tasks")
             yield Static(id="decisions_stream")
-            yield RichLog(id="events_panel", wrap=True, markup=False, max_lines=500)
+            yield RichLog(id="events", wrap=True, markup=False, max_lines=500)
         yield Footer()
 
     def on_mount(self) -> None:
@@ -107,10 +111,12 @@ class WatchApp(TextualApp[None]):
         run = store.get_run(self.run_id)
 
         # 1. Summary Bar
-        summary = self.query_one("#summary_bar", Static)
+        summary = self.query_one("#summary", Static)
         summary.update(
-            f" [b green]ORKESTRA[/b green]  run:[b]{run.run_id}[/b]  project:[b]{run.project_name}[/b]  "
-            f"state:[b cyan]{run.state.value.upper()}[/b cyan]  branch:[dim]{run.integration_branch or '-'}[/dim]"
+            f" [b green]ORKESTRA[/b green]  run:[b]{run.run_id}[/b] "
+            f" project:[b]{run.project_name}[/b] "
+            f" state:[b cyan]{run.state.value.upper()}[/b cyan]  "
+            f"branch:[dim]{run.integration_branch or '-'}[/dim]"
         )
 
         # 2. Provider Resource Bar
@@ -126,7 +132,11 @@ class WatchApp(TextualApp[None]):
                 w0 = snap.windows[0]
                 ratio_str = _render_quota_bar(w0.remaining_ratio)
                 conf_str = f"[{w0.confidence.value.upper()}]"
-                reset_str = f"reset {w0.seconds_to_reset/3600:.1f}h" if w0.seconds_to_reset else "reset unknown"
+                reset_str = (
+                    f"reset {w0.seconds_to_reset / 3600:.1f}h"
+                    if w0.seconds_to_reset
+                    else "reset unknown"
+                )
                 health_str = f"[bold green]{snap.health.value.upper()}[/bold green]"
                 if snap.waste_risk > 0.4:
                     health_str += " [yellow]waste HIGH[/yellow]"
@@ -169,7 +179,13 @@ class WatchApp(TextualApp[None]):
                 str(task.attempt_count),
                 key=task.task_id,
             )
-            if task.state.value in ("running", "verifying", "reviewing", "integrating", "waiting_for_quota"):
+            if task.state.value in (
+                "running",
+                "verifying",
+                "reviewing",
+                "integrating",
+                "waiting_for_quota",
+            ):
                 active_tasks.append((task.key, task.spec.kind.value, primary))
 
         # 4. Agent Hierarchy Tree
@@ -196,16 +212,18 @@ class WatchApp(TextualApp[None]):
         if routing_decisions:
             lines = [
                 f"[b cyan]DECISION STREAM[/b cyan] [dim]({d.timestamp[11:19]})[/dim] "
-                f"Task [b]{d.task_id}[/b] -> profile:[yellow]{d.selected_profile}[/yellow] (score:{d.score:.2f}) "
-                f"reasons:[dim]{', '.join(d.reasons[:3])}[/dim]"
+                f"Task [b]{d.task_id}[/b] -> profile:[yellow]{d.selected_profile}[/yellow] "
+                f"(score:{d.score:.2f}) reasons:[dim]{', '.join(d.reasons[:3])}[/dim]"
                 for d in routing_decisions
             ]
             decisions_widget.update("\n".join(lines))
         else:
-            decisions_widget.update("[b cyan]DECISION STREAM[/b cyan]\n[dim]No routing decisions recorded yet[/dim]")
+            decisions_widget.update(
+                "[b cyan]DECISION STREAM[/b cyan]\n[dim]No routing decisions recorded yet[/dim]"
+            )
 
         # 6. Event Log Stream
-        log = self.query_one("#events_panel", RichLog)
+        log = self.query_one("#events", RichLog)
         for event in store.events_for_run(self.run_id, limit=100):
             if event["event_id"] <= self._last_event_id:
                 continue

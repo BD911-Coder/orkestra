@@ -33,7 +33,9 @@ mode = "off"
 def agent_block(name: str, adapter: str = "fake", command: list[str] | None = None) -> str:
     lines = [f"[agents.{name}]", f'adapter = "{adapter}"']
     if command:
-        rendered = ", ".join(f'"{c}"' for c in command)
+        # TOML basic strings reject unescaped backslashes; use forward slashes
+        # (valid on Windows) so paths like C:\...\python.exe survive round-trip.
+        rendered = ", ".join(f'"{c.replace(chr(92), "/")}"' for c in command)
         lines.append(f"command = [{rendered}]")
     return "\n".join(lines)
 

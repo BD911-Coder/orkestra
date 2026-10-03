@@ -246,7 +246,16 @@ class TestInterruptionAndResume:
             ],
         )
         execution = asyncio.ensure_future(app.orchestrator.execute(run_id))
-        await asyncio.sleep(1.2)
+        # Poll until the attempt is actually persisted (workspace creation on
+        # Windows can take longer than a fixed 1.2s sleep, which would cancel
+        # before the attempt row is written and make the assertion below fail).
+        deadline = asyncio.get_event_loop().time() + 8.0
+        while not app.store.running_attempts(run_id):
+            if asyncio.get_event_loop().time() >= deadline:
+                break
+            await asyncio.sleep(0.1)
+        # Brief pause so the subprocess is actually sleeping (not just started).
+        await asyncio.sleep(0.3)
         execution.cancel()  # simulates process death mid-attempt
         with pytest.raises(asyncio.CancelledError):
             await execution

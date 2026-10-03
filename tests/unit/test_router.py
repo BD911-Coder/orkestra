@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from orkestra.kernel.router import ResourceRouter
 from orkestra.schemas.common import TaskKind, utc_now
 from orkestra.schemas.resource import (
@@ -12,7 +10,6 @@ from orkestra.schemas.resource import (
     QuotaConfidence,
     QuotaSource,
     QuotaWindow,
-    ResourceState,
 )
 from orkestra.schemas.task import TaskSpec
 
@@ -126,7 +123,6 @@ def test_scenario_2_long_window_scarcity_overrides_short_window() -> None:
 
 
 def test_quality_floor_enforcement() -> None:
-    now = utc_now().isoformat()
     router = ResourceRouter()
 
     snapshots: dict[str, ProviderUsageSnapshot] = {}

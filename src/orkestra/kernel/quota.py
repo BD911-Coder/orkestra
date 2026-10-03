@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 from orkestra.adapters.collectors import CollectorRegistry
 from orkestra.kernel.router import ResourceRouter
-from orkestra.schemas.resource import ProviderHealth, ResourceState, RoutingDecision
+from orkestra.schemas.resource import ResourceState, RoutingDecision
 from orkestra.schemas.task import TaskSpec
 
 if TYPE_CHECKING:
@@ -45,15 +45,17 @@ class QuotaTracker:
     _cooldown_until: dict[str, float] = field(default_factory=dict)
     _consecutive_limits: dict[str, int] = field(default_factory=dict)
 
-
     # ------------------------------------------------------------ budgets
 
     def tokens_used(self, agent: str) -> int:
         rows = self.store.usage_summary(self.run_id)
+        count_nested = self.config.policy.native_agents.count_nested_in_quota
+        total = 0
         for row in rows:
-            if row["agent"] == agent:
-                return int(row["input_tokens"] or 0) + int(row["output_tokens"] or 0)
-        return 0
+            row_agent = str(row["agent"])
+            if row_agent == agent or (count_nested and row_agent.startswith(f"{agent}:")):
+                total += int(row["input_tokens"] or 0) + int(row["output_tokens"] or 0)
+        return total
 
     def budget_exhausted(self, agent: str) -> bool:
         agent_config = self.config.agents.get(agent)
@@ -145,16 +147,15 @@ class QuotaTracker:
             allowed_agents=chain,
         )
 
-
         selected_profile = self.router.get_profile(decision.selected_profile)
         selected_agent = selected_profile.provider if selected_profile else primary
 
-        if selected_agent in failed_agents or self.budget_exhausted(selected_agent):
+        if (
+            selected_agent in failed_agents
+            or self.budget_exhausted(selected_agent)
+            or self.cooling_down(selected_agent)
+        ):
             fallback_agent, wait = self.pick(failed_agents, primary, fallbacks)
             return fallback_agent, wait, decision
 
-        if self.cooling_down(selected_agent):
-            return selected_agent, self.cooldown_remaining(selected_agent), decision
-
         return selected_agent, 0.0, decision
-

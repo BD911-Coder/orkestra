@@ -13,6 +13,7 @@ changed.
 from __future__ import annotations
 
 import os
+import shlex
 from pathlib import Path
 
 from orkestra.verify.binding import BindingStatus, binding_cache_key
@@ -88,7 +89,7 @@ class TestProbeSurvivesNoisyImports:
             check=True,
         )
 
-        proof = await prove_binding(root, [f"{sys.executable} check.py"])
+        proof = await prove_binding(root, [f"{shlex.quote(sys.executable)} check.py"])
         print(f"verdict: {proof.status.value} | {proof.reason[:120]}")
         assert proof.status is not BindingStatus.UNBOUND, (
             "a module printing on import was mistaken for a resolved path"

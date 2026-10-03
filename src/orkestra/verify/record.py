@@ -21,7 +21,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from orkestra.verify.runner import CommandResult, VerificationOutcome
+from orkestra.verify.runner import (
+    CommandResult,
+    VerificationOutcome,
+    _spawn_group_kwargs,
+)
 from orkestra.workspace.git import GitRepo
 
 #: What tree the result is a statement about.
@@ -140,7 +144,9 @@ async def probe_version(exe: str, argv0: str, cwd: Path, env: Mapping[str, str])
     else (``python3`` resolves to ``python3.13``) and keying on it would
     quietly stop probing anything.
     """
-    if not exe or Path(argv0).name not in _VERSION_PROBE_SAFE:
+    name = Path(argv0).name.lower()
+    name_stem = Path(argv0).stem.lower()
+    if not exe or (name not in _VERSION_PROBE_SAFE and name_stem not in _VERSION_PROBE_SAFE):
         return ""
     if _is_within(exe, cwd):
         return ""
@@ -152,7 +158,7 @@ async def probe_version(exe: str, argv0: str, cwd: Path, env: Mapping[str, str])
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=dict(env),
-            start_new_session=True,
+            **_spawn_group_kwargs(),
         )
     except OSError:
         return ""

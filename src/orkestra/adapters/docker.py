@@ -39,8 +39,10 @@ def wrap_in_docker(
     everything else about the invocation - stdin brief, timeout,
     environment extras - is preserved.
     """
-    uid = os.getuid() if uid is None else uid
-    gid = os.getgid() if gid is None else gid
+    getuid = getattr(os, "getuid", lambda: 1000)
+    getgid = getattr(os, "getgid", lambda: 1000)
+    uid = getuid() if uid is None else uid
+    gid = getgid() if gid is None else gid
     argv = [
         "docker",
         "run",

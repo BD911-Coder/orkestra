@@ -179,7 +179,8 @@ MIGRATIONS: list[str] = [
         created_at TEXT NOT NULL
     );
     """,
-    # 0005 - adaptive multi-ai command center: provider resource snapshots, routing decisions, handoffs, director states
+    # 0005 - adaptive multi-ai command center: provider resource snapshots,
+    # routing decisions, handoffs, director states
     """
     CREATE TABLE provider_snapshots (
         snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -226,5 +227,3 @@ MIGRATIONS: list[str] = [
     CREATE INDEX idx_director_states_run ON director_states(run_id);
     """,
 ]
-
-

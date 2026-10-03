@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Sequence
 
 import pytest
-from typer.testing import CliRunner, Result
+from typer.testing import CliRunner
 
 from orkestra.cli.main import app as cli_app
 from orkestra.schemas.common import utc_now

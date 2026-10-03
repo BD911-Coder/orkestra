@@ -115,3 +115,37 @@ class PolicyEngine:
                 "pushing is disabled by policy (set policy.allow_push = true to opt in)"
             )
         return PolicyDecision.ok()
+
+    # ---------------------------------------------------- native agents
+
+    def check_native_subagents(
+        self,
+        *,
+        depth: int = 1,
+        nested_count: int = 1,
+        total_concurrent: int = 1,
+        is_team: bool = False,
+    ) -> PolicyDecision:
+        """Validate provider-native subagent and agent-team limits."""
+        policy = self.config.native_agents
+        violations: list[str] = []
+        if is_team and not policy.allow_agent_teams:
+            violations.append("provider-native agent teams are disallowed by policy")
+        if not is_team and not policy.allow_subagents:
+            violations.append("provider-native subagents are disallowed by policy")
+        if depth > policy.max_subagent_depth:
+            violations.append(
+                f"subagent nesting depth {depth} exceeds maximum depth {policy.max_subagent_depth}"
+            )
+        if nested_count > policy.max_nested_workers:
+            violations.append(
+                f"nested workers {nested_count} exceeds limit ({policy.max_nested_workers})"
+            )
+        if total_concurrent > policy.max_total_concurrent_agents:
+            violations.append(
+                f"total concurrent agents {total_concurrent} exceeds limit "
+                f"({policy.max_total_concurrent_agents})"
+            )
+        if violations:
+            return PolicyDecision.deny(*violations)
+        return PolicyDecision.ok()

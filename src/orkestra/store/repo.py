@@ -30,7 +30,6 @@ from orkestra.store.db import Database
 from orkestra.verify.record import VerificationRecord
 
 
-
 def _now() -> str:
     return utc_now().isoformat()
 
@@ -770,13 +769,18 @@ class Store:
     def add_provider_snapshot(self, snapshot: ProviderUsageSnapshot) -> int:
         with self.db.tx() as conn:
             cur = conn.execute(
-                "INSERT INTO provider_snapshots (provider, account_profile, health, state, payload, observed_at)"
+                "INSERT INTO provider_snapshots "
+                "(provider, account_profile, health, state, payload, observed_at)"
                 " VALUES (?, ?, ?, ?, ?, ?)",
                 (
                     snapshot.provider,
                     snapshot.account_profile,
-                    snapshot.health.value if hasattr(snapshot.health, "value") else str(snapshot.health),
-                    snapshot.state.value if hasattr(snapshot.state, "value") else str(snapshot.state),
+                    snapshot.health.value
+                    if hasattr(snapshot.health, "value")
+                    else str(snapshot.health),
+                    snapshot.state.value
+                    if hasattr(snapshot.state, "value")
+                    else str(snapshot.state),
                     snapshot.model_dump_json(),
                     snapshot.observed_at or _now(),
                 ),
@@ -800,7 +804,8 @@ class Store:
     def add_routing_decision(self, decision: RoutingDecision) -> None:
         with self.db.tx() as conn:
             conn.execute(
-                "INSERT INTO routing_decisions (decision_id, run_id, task_id, selected_profile, score, payload, timestamp)"
+                "INSERT INTO routing_decisions "
+                "(decision_id, run_id, task_id, selected_profile, score, payload, timestamp)"
                 " VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (
                     decision.decision_id,
@@ -815,14 +820,16 @@ class Store:
 
     def routing_decisions_for_run(self, run_id: str, limit: int = 50) -> list[RoutingDecision]:
         rows = self.db.query(
-            "SELECT payload FROM routing_decisions WHERE run_id = ? ORDER BY timestamp DESC LIMIT ?",
+            "SELECT payload FROM routing_decisions WHERE run_id = ?"
+            " ORDER BY timestamp DESC LIMIT ?",
             (run_id, limit),
         )
         return [RoutingDecision.model_validate_json(r["payload"]) for r in reversed(rows)]
 
     def latest_routing_decision(self, run_id: str, task_id: str) -> RoutingDecision | None:
         row = self.db.query_one(
-            "SELECT payload FROM routing_decisions WHERE run_id = ? AND task_id = ? ORDER BY timestamp DESC LIMIT 1",
+            "SELECT payload FROM routing_decisions WHERE run_id = ? AND task_id = ?"
+            " ORDER BY timestamp DESC LIMIT 1",
             (run_id, task_id),
         )
         return RoutingDecision.model_validate_json(row["payload"]) if row else None
@@ -832,7 +839,9 @@ class Store:
     def add_handoff_checkpoint(self, checkpoint: HandoffCheckpoint) -> None:
         with self.db.tx() as conn:
             conn.execute(
-                "INSERT INTO handoff_checkpoints (handoff_id, run_id, task_id, attempt_id, prior_agent, successor_agent, reason, payload, timestamp)"
+                "INSERT INTO handoff_checkpoints "
+                "(handoff_id, run_id, task_id, attempt_id, prior_agent, successor_agent, "
+                "reason, payload, timestamp)"
                 " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     checkpoint.handoff_id,
@@ -849,7 +858,8 @@ class Store:
 
     def handoffs_for_task(self, run_id: str, task_id: str) -> list[HandoffCheckpoint]:
         rows = self.db.query(
-            "SELECT payload FROM handoff_checkpoints WHERE run_id = ? AND task_id = ? ORDER BY timestamp ASC",
+            "SELECT payload FROM handoff_checkpoints WHERE run_id = ? AND task_id = ?"
+            " ORDER BY timestamp ASC",
             (run_id, task_id),
         )
         return [HandoffCheckpoint.model_validate_json(r["payload"]) for r in rows]
@@ -859,10 +869,12 @@ class Store:
     def save_director_state(self, state: LogicalDirectorState) -> None:
         with self.db.tx() as conn:
             conn.execute(
-                "INSERT INTO director_states (director_id, run_id, active_engine_profile, payload, updated_at)"
+                "INSERT INTO director_states "
+                "(director_id, run_id, active_engine_profile, payload, updated_at)"
                 " VALUES (?, ?, ?, ?, ?)"
-                " ON CONFLICT(director_id) DO UPDATE SET active_engine_profile = excluded.active_engine_profile,"
-                " payload = excluded.payload, updated_at = excluded.updated_at",
+                " ON CONFLICT(director_id) DO UPDATE SET active_engine_profile = "
+                "excluded.active_engine_profile, "
+                "payload = excluded.payload, updated_at = excluded.updated_at",
                 (
                     state.director_id,
                     state.run_id,
@@ -878,4 +890,3 @@ class Store:
             (run_id,),
         )
         return LogicalDirectorState.model_validate_json(row["payload"]) if row else None
-

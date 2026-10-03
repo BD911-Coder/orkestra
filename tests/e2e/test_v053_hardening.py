@@ -21,6 +21,9 @@ class TestFollowUpContextLabeled:
         between explicit markers and say it is output, not instructions -
         while still delivering it verbatim (the agent needs the evidence).
         """
+        import shlex
+        import sys
+
         app = await make_project(tmp_path)
         try:
             gate = app.root / "hostile_gate.py"
@@ -36,6 +39,8 @@ class TestFollowUpContextLabeled:
                 return text
 
             app.orchestrator._render_brief = spy  # type: ignore[method-assign]
+            # Use shlex.quote(sys.executable) rather than python3: python3 may not exist on Windows,
+            # and unquoted Windows paths have backslashes consumed by shlex.split.
             run_id = await manual_run(
                 app,
                 [
@@ -43,7 +48,7 @@ class TestFollowUpContextLabeled:
                         spec(
                             "feat",
                             "FAKE:write:out.txt:done",
-                            acceptance=["python3 hostile_gate.py"],
+                            acceptance=[f"{shlex.quote(sys.executable)} hostile_gate.py"],
                         ),
                         assign("alpha", "beta", ["beta"]),
                     )

@@ -15,12 +15,13 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import os
+import shutil
 import signal
 import subprocess
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from orkestra.schemas.agent import (
     AgentEvent,
@@ -40,7 +41,7 @@ _KILL_GRACE_S = 5.0
 EventCallback = Callable[[AgentEvent], None]
 
 
-def _spawn_group_kwargs() -> dict[str, object]:
+def _spawn_group_kwargs() -> dict[str, Any]:
     """Platform-appropriate child-process group/session settings."""
     if os.name == "nt":
         return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
@@ -92,14 +93,18 @@ async def _terminate(proc: asyncio.subprocess.Process) -> None:
             await proc.wait()
         return
 
-    with contextlib.suppress(ProcessLookupError, PermissionError):
-        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-    try:
-        await asyncio.wait_for(proc.wait(), timeout=_KILL_GRACE_S)
-    except TimeoutError:
+    killpg = getattr(os, "killpg", None)
+    getpgid = getattr(os, "getpgid", None)
+    sig_kill = getattr(signal, "SIGKILL", signal.SIGTERM)
+    if killpg and getpgid:
         with contextlib.suppress(ProcessLookupError, PermissionError):
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-        await proc.wait()
+            killpg(getpgid(proc.pid), signal.SIGTERM)
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=_KILL_GRACE_S)
+        except TimeoutError:
+            with contextlib.suppress(ProcessLookupError, PermissionError):
+                killpg(getpgid(proc.pid), sig_kill)
+            await proc.wait()
 
 
 async def run_invocation(
@@ -110,14 +115,17 @@ async def run_invocation(
 ) -> AgentResult:
     """Run one adapter invocation to completion, timeout, or cancellation."""
     start = time.monotonic()
+    env = gate_env(Path(spec.cwd), spec.env_extra)
+    executable = shutil.which(spec.argv[0], path=env.get("PATH")) or spec.argv[0]
     try:
         proc = await asyncio.create_subprocess_exec(
-            *spec.argv,
+            executable,
+            *spec.argv[1:],
             cwd=spec.cwd,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=gate_env(Path(spec.cwd), spec.env_extra),
+            env=env,
             limit=_MAX_LINE_BYTES,
             **_spawn_group_kwargs(),
         )

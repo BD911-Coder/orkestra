@@ -457,15 +457,16 @@ class Orchestrator:
             if quota is None:  # pragma: no cover - execute() always sets it
                 msg = "quota tracker missing; _run_task outside execute()"
                 raise RuntimeError(msg)
-            agent, wait_s, decision = await quota.pick_adaptive(
+            agent, wait_s, routing_decision = await quota.pick_adaptive(
                 task.task_id, task.spec, failed_agents, assignment.primary, assignment.fallbacks
             )
-            if decision is not None:
+            if routing_decision is not None:
                 self.emit(
                     run_id,
                     EventKind.TEXT,
-                    f"Router selected profile {decision.selected_profile} for task {task.key} "
-                    f"(score={decision.score:.2f}, reasons={', '.join(decision.reasons[:3])})",
+                    f"Router selected profile {routing_decision.selected_profile} for task "
+                    f"{task.key} (score={routing_decision.score:.2f}, "
+                    f"reasons={', '.join(routing_decision.reasons[:3])})",
                     task_id=task.task_id,
                 )
 
@@ -491,7 +492,8 @@ class Orchestrator:
                 self.emit(
                     run_id,
                     EventKind.WARNING,
-                    f"all eligible agents rate-limited; waiting {wait_s:.0f}s for {agent} (WAITING_FOR_QUOTA)",
+                    f"all eligible agents rate-limited; waiting {wait_s:.0f}s for {agent} "
+                    "(WAITING_FOR_QUOTA)",
                     task_id=task.task_id,
                 )
                 await asyncio.sleep(min(wait_s, 60.0))
@@ -506,7 +508,8 @@ class Orchestrator:
                 self.emit(
                     run_id,
                     EventKind.WARNING,
-                    f"Stagnation detected on task {task.key} (attempt {attempt_index}): triggering model escalation",
+                    f"Stagnation detected on task {task.key} (attempt {attempt_index}): "
+                    "triggering model escalation",
                     task_id=task.task_id,
                 )
 
@@ -556,9 +559,13 @@ class Orchestrator:
                 )
 
                 # Check for mid-task handoff capability if progress was preserved
-                if workspace is not None and result.error_kind in (ErrorKind.RATE_LIMIT, ErrorKind.AUTH):
-                    from orkestra.schemas.resource import HandoffCheckpoint
+                if workspace is not None and result.error_kind in (
+                    ErrorKind.RATE_LIMIT,
+                    ErrorKind.AUTH,
+                ):
                     from orkestra.schemas.common import utc_now
+                    from orkestra.schemas.resource import HandoffCheckpoint
+
                     handoff = HandoffCheckpoint(
                         handoff_id=new_id("hdf"),
                         run_id=run_id,
@@ -576,7 +583,8 @@ class Orchestrator:
                     self.emit(
                         run_id,
                         EventKind.WARNING,
-                        f"Mid-task handoff checkpointed for {task.key}: provider {agent} ({result.error_kind.value})",
+                        f"Mid-task handoff checkpointed for {task.key}: provider {agent} "
+                        f"({result.error_kind.value})",
                         task_id=task.task_id,
                     )
 
@@ -623,7 +631,6 @@ class Orchestrator:
                     expected=(TaskState.RUNNING,),
                 )
                 continue
-
 
             # Agent finished; deterministic pipeline takes over.
             quota.note_success(agent)

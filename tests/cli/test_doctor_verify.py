@@ -54,7 +54,9 @@ class TestDoctorVerifyRows:
         assert "NOT bound" in result.output
 
     def test_bound_gate_passes(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        _project(tmp_path, monkeypatch, f'\n[verify]\ncommands = ["{PYTEST_GATE}"]\n')
+        # Replace backslashes with forward slashes so the TOML string is valid on Windows.
+        gate_toml = PYTEST_GATE.replace("\\", "/")
+        _project(tmp_path, monkeypatch, f'\n[verify]\ncommands = ["{gate_toml}"]\n')
         result = runner.invoke(app, ["doctor", "--prove-gate"])
         print(result.output)
         assert_exit(result, 0)

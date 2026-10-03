@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from orkestra.adapters.base import AgentAdapter
     from orkestra.policy import PolicyEngine
     from orkestra.schemas.capability import CapabilityMatrix
+    from orkestra.store.repo import Store
 
 M = TypeVar("M", bound=BaseModel)
 
@@ -67,12 +68,11 @@ class DirectorService:
         self.store = store
         self.fallback_adapters = fallback_adapters or {}
 
-
     # ----------------------------------------------------------- plumbing
 
     async def _ask(self, prompt: str, model: type[M], task_id: str) -> M:
         """One structured exchange with bounded schema-repair retries and Director failover."""
-        adapters_chain = [(self.director_name, self.adapter)] + list(self.fallback_adapters.items())
+        adapters_chain = [(self.director_name, self.adapter), *self.fallback_adapters.items()]
         last_error = ""
 
         for adapter_name, adapter in adapters_chain:
@@ -132,7 +132,6 @@ class DirectorService:
             f"attempts: {last_error}"
         )
         raise DirectorError(msg)
-
 
     # ---------------------------------------------------------- decisions
 

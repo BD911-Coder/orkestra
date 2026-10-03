@@ -9,20 +9,18 @@ Intelligence proposes; deterministic router disposes.
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from orkestra.schemas.common import TaskKind, utc_now
 from orkestra.schemas.resource import (
     ExecutionProfile,
     ProviderHealth,
     ProviderUsageSnapshot,
-    QuotaWindow,
     ResourceState,
     RoutingDecision,
 )
-
 
 if TYPE_CHECKING:
     from orkestra.schemas.task import TaskSpec
@@ -158,9 +156,8 @@ class ResourceRouter:
         for w in snapshot.windows:
             if w.is_exhausted:
                 return 1.0
-            if w.remaining_ratio is not None:
-                if w.remaining_ratio < min_remaining:
-                    min_remaining = w.remaining_ratio
+            if w.remaining_ratio is not None and w.remaining_ratio < min_remaining:
+                min_remaining = w.remaining_ratio
 
         # Scarcity is inverse of minimum remaining quota ratio across all windows
         if min_remaining <= 0.15:
@@ -294,11 +291,13 @@ class ResourceRouter:
                 ),
             )
             return RoutingDecision(
-                decision_id=f"dec_{task_id}",
+                decision_id=f"dec_{task_id}_{uuid4().hex[:6]}",
                 run_id=run_id,
                 task_id=task_id,
                 selected_profile=fallback_profile.profile_id,
-                alternatives=[p.profile_id for p in candidates if p.profile_id != fallback_profile.profile_id],
+                alternatives=[
+                    p.profile_id for p in candidates if p.profile_id != fallback_profile.profile_id
+                ],
                 score=0.0,
                 reasons=["FALLBACK_SELECTION_ALL_CANDIDATES_EXHAUSTED_OR_FLOORED"],
                 waste_risk=0.0,
@@ -306,7 +305,6 @@ class ResourceRouter:
                 quality_floor_applied=True,
                 timestamp=now,
             )
-
 
         # Sort descending by score
         scored_profiles.sort(key=lambda x: x[0], reverse=True)
@@ -316,7 +314,7 @@ class ResourceRouter:
         alternatives = [p.profile_id for _, p, _, _, _, _ in scored_profiles[1:]]
 
         decision = RoutingDecision(
-            decision_id=f"dec_{task_id}_{int(utc_now().timestamp())}",
+            decision_id=f"dec_{task_id}_{uuid4().hex[:8]}",
             run_id=run_id,
             task_id=task_id,
             selected_profile=best_p.profile_id,

@@ -43,7 +43,6 @@ class TaskState(StrEnum):
     CANCELLED = "cancelled"
 
 
-
 class AttemptState(StrEnum):
     """Lifecycle of a single agent attempt at a task."""
 

@@ -37,7 +37,7 @@ async def _project_with_source(
     (root / "tests" / "test_widget.py").write_text(
         "from widget import bump\n\n\ndef test_bump() -> None:\n    assert bump() == 42\n"
     )
-    rendered = ", ".join(f'"{c}"' for c in commands)
+    rendered = ", ".join(f'"{c.replace(chr(92), "/")}"' for c in commands)
     config_path = root / ".orkestra" / "config.toml"
     config_path.write_text(
         config_path.read_text() + f"\n[verify]\ncommands = [{rendered}]{extra}\n"

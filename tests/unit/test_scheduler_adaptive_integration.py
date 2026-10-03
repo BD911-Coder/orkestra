@@ -10,7 +10,7 @@ import pytest
 from orkestra.adapters.fake import FakeAdapter
 from orkestra.kernel.scheduler import Orchestrator
 from orkestra.policy import PolicyEngine
-from orkestra.schemas.common import RunState, TaskKind, TaskState
+from orkestra.schemas.common import TaskKind
 from orkestra.schemas.config import ProjectConfig
 from orkestra.schemas.task import Assignment, TaskSpec
 from orkestra.store import Database, Store
@@ -38,6 +38,7 @@ async def test_scheduler_adaptive_dispatch_and_handoff() -> None:
         root = Path(tmpdir)
 
         import subprocess
+
         subprocess.run(["git", "init"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.name", "test"], cwd=root, check=True)
@@ -60,15 +61,21 @@ async def test_scheduler_adaptive_dispatch_and_handoff() -> None:
             orchestrator = Orchestrator(root, config, store, adapters, policy, workspaces)
 
             run_id = store.create_run("test_project")
-            spec = TaskSpec(key="t1", kind=TaskKind.RESEARCH, title="Research Architecture", mutates_repo=False)
-            assignment = Assignment(primary="claude", reviewers=["antigravity"], fallbacks=["antigravity"])
+            spec = TaskSpec(
+                key="t1", kind=TaskKind.RESEARCH, title="Research Architecture", mutates_repo=False
+            )
+            assignment = Assignment(
+                primary="claude", reviewers=["antigravity"], fallbacks=["antigravity"]
+            )
             task_id = store.add_task(run_id, spec, assignment)
 
-            rev = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
+            rev = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True
+            ).stdout.strip()
             store.set_run_git(run_id, rev, "main")
 
-            # Execute run
             state = await orchestrator.execute(run_id)
+            assert state is not None
 
             # Check routing decision recorded
             decisions = store.routing_decisions_for_run(run_id)

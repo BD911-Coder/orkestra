@@ -19,10 +19,12 @@ from __future__ import annotations
 import asyncio
 import os
 import shlex
+import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from orkestra.errors import VerificationError
 
@@ -74,7 +76,7 @@ _WINDOWS_ENV_ALLOWLIST = frozenset(
 _GATE_FORBIDDEN = set("|&;<>`$()*?{}[]\n")
 
 
-def _spawn_group_kwargs() -> dict[str, object]:
+def _spawn_group_kwargs() -> dict[str, Any]:
     """Platform-appropriate child-process group/session settings."""
     if os.name == "nt":
         return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
@@ -91,8 +93,6 @@ def gate_command_problem(command: str, *, strict: bool = True) -> str | None:
     string parses and its executable exists, so a broken config is caught
     *before* an agent is dispatched, without second-guessing the user.
     """
-    import shutil as _shutil
-
     stripped = command.strip()
     if not stripped:
         return "empty"
@@ -116,7 +116,8 @@ def gate_command_problem(command: str, *, strict: bool = True) -> str | None:
         return "empty"
     if strict and len(argv) > 12:
         return "too many words to be a command - reads as prose"
-    if _shutil.which(argv[0]) is None:
+    path_env = subprocess_env().get("PATH")
+    if shutil.which(argv[0], path=path_env) is None:
         return f"{argv[0]!r} is not an executable on PATH"
     return None
 
@@ -125,10 +126,14 @@ def subprocess_env(extra: dict[str, str] | None = None) -> dict[str, str]:
     """Allowlisted environment for verification/agent subprocesses (threat T3)."""
     env: dict[str, str] = {}
     for key, value in os.environ.items():
-        if key in _ENV_ALLOWLIST:
+        if key in _ENV_ALLOWLIST or (os.name == "nt" and key.upper() in _WINDOWS_ENV_ALLOWLIST):
             env[key] = value
-        elif os.name == "nt" and key.upper() in _WINDOWS_ENV_ALLOWLIST:
-            env[key] = value
+    if os.name == "nt" and "PATH" in env:
+        git_exe = shutil.which("git")
+        if git_exe:
+            git_usr_bin = str(Path(git_exe).parent.parent / "usr" / "bin")
+            if Path(git_usr_bin).is_dir() and git_usr_bin not in env["PATH"]:
+                env["PATH"] = f"{env['PATH']};{git_usr_bin}"
     if extra:
         env.update(extra)
     return env
@@ -248,9 +253,11 @@ async def run_verification(
         if not argv:
             continue
         start = time.monotonic()
+        executable = shutil.which(argv[0], path=env.get("PATH")) or argv[0]
         try:
             proc = await asyncio.create_subprocess_exec(
-                *argv,
+                executable,
+                *argv[1:],
                 cwd=str(cwd),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,

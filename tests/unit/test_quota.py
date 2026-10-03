@@ -63,6 +63,19 @@ class TestBudgets:
         tracker = QuotaTracker(config=make_config(1000), store=store, run_id=run2)
         assert not tracker.budget_exhausted("alpha")
 
+    def test_budget_aggregates_nested_subagents(self, tracker: QuotaTracker) -> None:
+        # Base agent used 600 tokens
+        tracker.store.add_usage(
+            tracker.run_id, "alpha", None, Usage(input_tokens=400, output_tokens=200)
+        )
+        assert not tracker.budget_exhausted("alpha")
+        # Subagent "alpha:worker-1" used 500 tokens -> total 1100 >= 1000 budget
+        tracker.store.add_usage(
+            tracker.run_id, "alpha:worker-1", None, Usage(input_tokens=300, output_tokens=200)
+        )
+        assert tracker.tokens_used("alpha") == 1100
+        assert tracker.budget_exhausted("alpha")
+
 
 class TestCooldowns:
     def test_escalation_and_reset(self, tracker: QuotaTracker) -> None:

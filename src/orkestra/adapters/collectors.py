@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import re
 import shutil
 import time
@@ -33,8 +32,7 @@ class UsageCollector(Protocol):
 
     async def collect(
         self, store: Store | None = None, run_id: str | None = None
-    ) -> ProviderUsageSnapshot:
-        ...
+    ) -> ProviderUsageSnapshot: ...
 
 
 class BaseUsageCollector:
@@ -146,9 +144,7 @@ class ClaudeUsageCollector(BaseUsageCollector):
         now = _now_iso()
         exe = shutil.which("claude")
         if not exe:
-            snapshot = self._fallback_snapshot_from_ledger(
-                store, run_id, "claude binary not found"
-            )
+            snapshot = self._fallback_snapshot_from_ledger(store, run_id, "claude binary not found")
             self._cached_snapshot = snapshot
             self._last_collected_time = time.monotonic()
             return snapshot
@@ -188,9 +184,7 @@ class AntigravityUsageCollector(BaseUsageCollector):
         now = _now_iso()
         exe = shutil.which("agy") or shutil.which("antigravity")
         if not exe:
-            snapshot = self._fallback_snapshot_from_ledger(
-                store, run_id, "agy binary not found"
-            )
+            snapshot = self._fallback_snapshot_from_ledger(store, run_id, "agy binary not found")
             self._cached_snapshot = snapshot
             self._last_collected_time = time.monotonic()
             return snapshot
@@ -204,11 +198,11 @@ class AntigravityUsageCollector(BaseUsageCollector):
             )
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=5.0)
             text = stdout.decode("utf-8", errors="replace")
-            snapshot = parse_antigravity_models_output(text, self.provider, self.account_profile, now)
-        except Exception:
-            snapshot = self._fallback_snapshot_from_ledger(
-                store, run_id, "agy models probe failed"
+            snapshot = parse_antigravity_models_output(
+                text, self.provider, self.account_profile, now
             )
+        except Exception:
+            snapshot = self._fallback_snapshot_from_ledger(store, run_id, "agy models probe failed")
 
         self._cached_snapshot = snapshot
         self._last_collected_time = time.monotonic()
@@ -227,7 +221,6 @@ class GeminiCliUsageCollector(BaseUsageCollector):
         if self._is_cache_valid() and self._cached_snapshot is not None:
             return self._cached_snapshot
 
-        now = _now_iso()
         snapshot = self._fallback_snapshot_from_ledger(store, run_id, "gemini status probed")
         self._cached_snapshot = snapshot
         self._last_collected_time = time.monotonic()
@@ -244,6 +237,7 @@ class UnknownUsageCollector(BaseUsageCollector):
 
 
 # ---------------------------------------------------- Bounded Defensive Parsers
+
 
 def parse_codex_status_output(
     text: str, provider: str, account_profile: str, observed_at: str

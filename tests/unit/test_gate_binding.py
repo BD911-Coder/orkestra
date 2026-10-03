@@ -190,7 +190,8 @@ class TestWorktreePythonPath:
         assert value.endswith("/somewhere/else/src")
 
     def test_flat_layout_names_the_root_and_no_duplicates(self, tmp_path: Path) -> None:
-        value = worktree_pythonpath(tmp_path, f"{tmp_path.resolve()}:")
+        # Use os.pathsep so the test passes on both POSIX (':') and Windows (';').
+        value = worktree_pythonpath(tmp_path, f"{tmp_path.resolve()}{os.pathsep}")
         assert value == str(tmp_path.resolve())
 
     def test_a_project_owning_types_py_does_not_break_the_interpreter(self, tmp_path: Path) -> None:

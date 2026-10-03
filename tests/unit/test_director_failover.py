@@ -27,7 +27,9 @@ class MockParser:
 
     def result(self, returncode: int, duration: float, cwd: str) -> AgentResult:
         if not self.ok:
-            return AgentResult(status=ResultStatus.ERROR, error_kind=ErrorKind.CRASH, error_detail="Failed")
+            return AgentResult(
+                status=ResultStatus.ERROR, error_kind=ErrorKind.CRASH, error_detail="Failed"
+            )
         return AgentResult(status=ResultStatus.OK, structured=self.payload)
 
 
@@ -39,6 +41,7 @@ class MockFailingAdapter(AgentAdapter):
 
     async def check_auth(self) -> Any:
         from orkestra.schemas.agent import AuthStatus
+
         return AuthStatus(ready=True)
 
     def build_invocation(self, brief: TaskBrief) -> InvocationSpec:
@@ -56,6 +59,7 @@ class MockWorkingAdapter(AgentAdapter):
 
     async def check_auth(self) -> Any:
         from orkestra.schemas.agent import AuthStatus
+
         return AuthStatus(ready=True)
 
     def build_invocation(self, brief: TaskBrief) -> InvocationSpec:

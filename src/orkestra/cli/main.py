@@ -39,7 +39,6 @@ console = Console()
 err_console = Console(stderr=True)
 
 
-
 def _version_callback(value: bool) -> None:
     if value:
         console.print(f"orkestra {orkestra.__version__}")
@@ -2025,7 +2024,8 @@ def usage(
 
         if not snapshots:
             console.print(
-                "[dim]No provider snapshots recorded. Run `orkestra usage --refresh` to collect live snapshots.[/dim]"
+                "[dim]No provider snapshots recorded. "
+                "Run `orkestra usage --refresh` to collect live snapshots.[/dim]"
             )
             return
 
@@ -2036,7 +2036,7 @@ def usage(
                 if w0 and w0.remaining_ratio is not None
                 else "UNKNOWN"
             )
-            reset_str = f"{w0.seconds_to_reset/3600:.1f}h" if w0 and w0.seconds_to_reset else "-"
+            reset_str = f"{w0.seconds_to_reset / 3600:.1f}h" if w0 and w0.seconds_to_reset else "-"
             source_str = w0.source.value if w0 else "unknown"
             conf_str = w0.confidence.value if w0 else "unknown"
 
@@ -2093,7 +2093,6 @@ def routing_explain(
         console.print(table)
     finally:
         application.close()
-
 
 
 def main() -> None:  # console-script shim used by some packagers

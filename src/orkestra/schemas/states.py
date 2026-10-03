@@ -41,7 +41,9 @@ TASK_TRANSITIONS: dict[TaskState, frozenset[TaskState]] = {
         {TaskState.DONE, TaskState.READY, TaskState.BLOCKED, TaskState.CANCELLED}
     ),
     TaskState.BLOCKED: frozenset({TaskState.READY, TaskState.FAILED, TaskState.CANCELLED}),
-    TaskState.WAITING_FOR_QUOTA: frozenset({TaskState.READY, TaskState.CANCELLED, TaskState.FAILED}),
+    TaskState.WAITING_FOR_QUOTA: frozenset(
+        {TaskState.READY, TaskState.CANCELLED, TaskState.FAILED}
+    ),
     TaskState.DONE: frozenset(),
     TaskState.FAILED: frozenset({TaskState.READY}),
     TaskState.CANCELLED: frozenset(),
@@ -83,7 +85,6 @@ RUN_TRANSITIONS: dict[RunState, frozenset[RunState]] = {
     RunState.FAILED: frozenset({RunState.RUNNING}),  # resume after fix
     RunState.CANCELLED: frozenset(),
 }
-
 
 
 def can_transition_task(current: TaskState, new: TaskState) -> bool:

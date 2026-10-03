@@ -17,7 +17,9 @@ def _set_verify(app: App, commands: list[str]) -> App:
 
     config_path = app.root / ".orkestra" / "config.toml"
     text = config_path.read_text()
-    rendered = ", ".join(f'"{c}"' for c in commands)
+    # TOML basic strings reject unescaped backslashes; convert Windows paths to
+    # forward slashes (valid on Windows) to avoid parse errors.
+    rendered = ", ".join(f'"{c.replace(chr(92), "/")}"' for c in commands)
     config_path.write_text(text + f"\n[verify]\ncommands = [{rendered}]\n")
     app.close()
     return build_app(app.root, offline=True)
@@ -66,6 +68,8 @@ class TestGateAuthority:
             app.close()
 
     async def test_failure_output_is_captured_in_events(self, tmp_path: Path) -> None:
+        import sys
+
         from orkestra.workspace.git import GitRepo
 
         base = await make_project(tmp_path)
@@ -75,7 +79,8 @@ class TestGateAuthority:
             "import sys\nsys.stderr.write('BOOM-MARKER')\nsys.exit(1)\n"
         )
         await GitRepo(base.root).add_all_and_commit("add gate")
-        app = _set_verify(base, ["python3 gate.py"])
+        # Use sys.executable rather than python3: python3 may not exist on Windows.
+        app = _set_verify(base, [f"{sys.executable} gate.py"])
         try:
             run_id = await manual_run(
                 app, [(spec("t", "FAKE:write:a.txt:x"), assign("alpha", "beta"))]

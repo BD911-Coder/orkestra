@@ -79,6 +79,27 @@ class DirectorConfig(BaseModel):
     max_decision_retries: int = Field(default=2, ge=0, le=5)
 
 
+class NativeMultiAgentPolicyConfig(BaseModel):
+    """Policy governing provider-native subagents, teams, and nesting."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    allow_subagents: bool = True
+    """Allow provider-native subagents (e.g. Claude subagents, Antigravity subagents)."""
+    allow_agent_teams: bool = True
+    """Allow provider-native agent teams."""
+    max_nested_workers: int = Field(default=4, ge=1, le=16)
+    """Maximum nested workers per parent agent."""
+    max_total_concurrent_agents: int = Field(default=8, ge=1, le=64)
+    """Maximum total concurrent agents across the entire orchestration run."""
+    max_subagent_depth: int = Field(default=2, ge=1, le=5)
+    """Maximum delegation nesting depth (e.g. depth 2 allows agent -> subagent -> subagent)."""
+    allow_provider_auto_decide: bool = True
+    """Allow provider to decide automatically within Orkestra limits."""
+    count_nested_in_quota: bool = True
+    """Count nested agents in quota and resource planning calculations (ALWAYS)."""
+
+
 class PolicyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -94,6 +115,9 @@ class PolicyConfig(BaseModel):
         default_factory=lambda: [".git", ".orkestra", ".github/workflows"]
     )
     sandbox: Literal["none", "docker"] = "none"
+    native_agents: NativeMultiAgentPolicyConfig = Field(
+        default_factory=NativeMultiAgentPolicyConfig
+    )
 
 
 class VerifyConfig(BaseModel):
@@ -164,7 +188,6 @@ class ProjectConfig(BaseModel):
     verify: VerifyConfig = Field(default_factory=VerifyConfig)
     probes: ProbeConfig = Field(default_factory=ProbeConfig)
     routing: RoutingConfig = Field(default_factory=RoutingConfig)
-
 
     @model_validator(mode="after")
     def _validate(self) -> Self:

@@ -54,7 +54,7 @@ class TestWatchApp:
             summary = watch.query_one("#summary", Static)
             summary_text = str(summary.render())
             assert run.run_id in summary_text
-            assert "complete" in summary_text
+            assert "complete" in summary_text.lower()
             table = watch.query_one("#tasks", DataTable)
             assert table.row_count == 3  # implement / test / document
             log = watch.query_one("#events", RichLog)

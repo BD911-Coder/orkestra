@@ -34,7 +34,9 @@ def _set_verify(app: App, commands: list[str], *, binding_check: bool = False) -
     than what they say. The tests that are about binding turn it on.
     """
     config_path = app.root / ".orkestra" / "config.toml"
-    rendered = ", ".join(f'"{c}"' for c in commands)
+    # TOML basic strings reject unescaped backslashes; convert Windows paths to
+    # forward slashes (which work on Windows) so the config round-trips cleanly.
+    rendered = ", ".join(f'"{c.replace(chr(92), "/")}"' for c in commands)
     config_path.write_text(
         config_path.read_text()
         + f"\n[verify]\ncommands = [{rendered}]\nbinding_check = {str(binding_check).lower()}\n"
@@ -71,7 +73,8 @@ class TestVerificationRecordsMatchTheRun:
         # A measurable sleep: a duration that is always 0.0 would let a
         # hardcoded zero pass this test.
         await _commit_gate_scripts(base.root, {"slow.py": "import time\ntime.sleep(0.35)\n"})
-        app = _set_verify(base, ["python3 slow.py", "true"])
+        py = sys.executable.replace("\\", "/")
+        app = _set_verify(base, [f"{py} slow.py", "true"])
         try:
             run_id = await manual_run(
                 app, [(spec("t", "FAKE:write:a.txt:x"), assign("alpha", "beta"))]
@@ -103,13 +106,13 @@ class TestVerificationRecordsMatchTheRun:
             assert from_rows == events
 
             slow, fast = rows
-            assert slow.command == "python3 slow.py"
+            assert slow.command == f"{py} slow.py"
             assert slow.duration_s >= 0.35, slow.duration_s
             assert fast.command == "true"
             # The sleep really is the slow one: the durations are measured,
             # not copied from a single shared value.
             assert slow.duration_s > fast.duration_s
-            assert slow.argv == ["python3", "slow.py"]
+            assert slow.argv == [py, "slow.py"]
             assert fast.argv == ["true"]
         finally:
             app.close()
@@ -150,7 +153,8 @@ class TestVerificationRecordsMatchTheRun:
         await _commit_gate_scripts(base.root, {"boom.py": "import sys\nsys.exit(3)\n"})
         # run_verification stops at the first failure, so the second command
         # never runs and must not appear as evidence that it did.
-        app = _set_verify(base, ["python3 boom.py", "true"])
+        py = sys.executable.replace("\\", "/")
+        app = _set_verify(base, [f"{py} boom.py", "true"])
         try:
             run_id = await manual_run(
                 app, [(spec("t", "FAKE:write:a.txt:x"), assign("alpha", "beta"))]
@@ -161,7 +165,7 @@ class TestVerificationRecordsMatchTheRun:
             exits = [r.exit_code for r in rows]
             print(f"recorded commands={commands} exits={exits}")
             assert rows, "the failing gate ran, so it must have been recorded"
-            assert set(commands) == {"python3 boom.py"}
+            assert set(commands) == {f"{py} boom.py"}
             assert set(exits) == {3}
             # Same failing gate on every retry, one row each, never "true".
             assert len(rows) == len(_summary_lines(app, run_id))
@@ -179,7 +183,8 @@ class TestVerificationRecordsMatchTheRun:
 
     async def test_executable_is_resolved_to_a_real_path(self, tmp_path: Path) -> None:
         base = await make_project(tmp_path)
-        app = _set_verify(base, ["python3 -c pass"])
+        py = sys.executable.replace("\\", "/")
+        app = _set_verify(base, [f"{py} -c pass"])
         try:
             run_id = await manual_run(
                 app, [(spec("t", "FAKE:write:a.txt:x"), assign("alpha", "beta"))]
@@ -217,9 +222,10 @@ class TestBindingProofReachesTheRecord:
         )
         await GitRepo(app.root).add_all_and_commit("checker")
         config_path = app.root / ".orkestra" / "config.toml"
+        py = sys.executable.replace("\\", "/")
         config_path.write_text(
             config_path.read_text()
-            + f'\n[verify]\ncommands = ["{sys.executable} check.py"]\nbinding_check = true\n'
+            + f'\n[verify]\ncommands = ["{py} check.py"]\nbinding_check = true\n'
         )
         app.close()
         app = build_app(app.root, offline=True)
@@ -276,8 +282,9 @@ class TestBindingProofIsPaidOnce:
         )
         await GitRepo(app.root).add_all_and_commit("seed and checker")
         config_path = app.root / ".orkestra" / "config.toml"
+        py = sys.executable.replace("\\", "/")
         config_path.write_text(
-            config_path.read_text() + f'\n[verify]\ncommands = ["{sys.executable} check.py"]\n'
+            config_path.read_text() + f'\n[verify]\ncommands = ["{py} check.py"]\n'
         )
         app.close()
         return build_app(app.root, offline=True)
