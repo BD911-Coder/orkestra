@@ -94,14 +94,14 @@ This document details the ordered engineering phases, dependencies, acceptance c
     - Shadow evaluation harness: evaluate candidate policies against historical tasks offline
     - Staged promotion lifecycle: Experimental -> Candidate -> Active -> Deprecated
     - Instant rollback mechanism on regression detection
-  - [ ] **K9 — External Capability & Skill Import with Security Scanning** (`src/orkestra/capabilities/scanner.py`, `importer.py`)
+  - [x] **K9 — External Capability & Skill Import with Security Scanning** (`src/orkestra/capabilities/scanner.py`, `importer.py`)
     - Skill scanner: AST static analysis, permission check, prompt injection detection, safe directory sandboxing
     - Universal skill schema adapter (imports compliant `SKILL.md` from external ecosystems like ECC without runtime dependencies)
     - Lazy skill selection: dynamic injection of relevant skills based on intent and repo context
-  - [ ] **K10 — Comprehensive Performance & Capability Benchmark Harness** (`src/orkestra/benchmark/harness.py`, `cli/benchmark.py`)
+  - [x] **K10 — Comprehensive Performance & Capability Benchmark Harness** (`src/orkestra/benchmark/harness.py`, `cli/benchmark.py`)
     - Reproducible test batteries across domains (coding, reasoning, research, refactoring)
     - Standardized scorecard generation (pass rates, latency, token spend, repair efficiency)
-    - CLI commands: `orkestra benchmark run`, `orkestra benchmark report`
+    - CLI commands: `orkestra benchmark list`, `orkestra benchmark run`
   - [ ] **K11 — Intelligent Project Onboarding & Capability Auto-Detection** (`src/orkestra/director/onboarding.py`, `cli/onboard.py`)
     - Repository marker detection (languages, frameworks, test suites, linters, databases, docs)
     - Auto-generation of optimized `.orkestra/config.toml` and baseline project capabilities

@@ -18,6 +18,8 @@ from rich.table import Table
 
 import orkestra
 from orkestra.app import CONFIG_RELPATH, App, build_app
+from orkestra.cli.benchmark import benchmark_app
+from orkestra.cli.capabilities import capabilities_app
 from orkestra.cli.text import clip
 from orkestra.errors import ConfigError, OrkestraError
 from orkestra.schemas.agent import AgentEvent, EventKind
@@ -34,6 +36,9 @@ app.add_typer(agents_app, name="agents")
 
 routing_app = typer.Typer(help="Inspect resource routing decisions and explanations.")
 app.add_typer(routing_app, name="routing")
+
+app.add_typer(benchmark_app, name="benchmark")
+app.add_typer(capabilities_app, name="capabilities")
 
 console = Console()
 err_console = Console(stderr=True)
