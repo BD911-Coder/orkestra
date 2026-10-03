@@ -125,6 +125,12 @@ class RoutingDecision(BaseModel):
     scarcity: float = 0.0
     quality_floor_applied: bool = False
     timestamp: str
+    supersedes_decision_id: str | None = None
+    revision_number: int = 1
+    execution_strategy: str = "SINGLE_AGENT"
+    selected_topology: str = "NONE"
+    confidence: str = "high"
+    raw_factors: dict[str, float] = Field(default_factory=dict)
 
 
 class HandoffCheckpoint(BaseModel):

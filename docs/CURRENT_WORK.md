@@ -1,11 +1,11 @@
 # CURRENT WORK — RESUME POINTER
 
-**Current Phase:** Phase L — Reference Architecture Mining & Provenance (Completed) -> Phase M — Typed Execution Artifacts & Checkpoint Governance
-**Current Objective:** Checkpoint 17 — Implement Phase L documentation and begin Phase M (Canonical Typed Artifacts and Checkpoint Governance).
+**Current Phase:** Phase M — Typed Execution Artifacts & Checkpoint Governance (Completed) -> Phase N — Resource Intelligence Engine V2
+**Current Objective:** Checkpoint 18 — Implement Phase M (Canonical Typed Artifacts and Checkpoint Governance) and commit.
 **Current Branch:** `feat/performance-os-v2`
 **Tracking Remote:** `origin/feat/performance-os-v2`
-**Current HEAD:** Pending Checkpoint 17 commit (`docs(mining): complete Phase L reference architecture mining and V2 master roadmap`)
-**Last Completed Checkpoint:** Checkpoint 16 — Comprehensive Evidence Documentation & Quality Gates Verification (`45ef10d`)
+**Current HEAD:** Pending Checkpoint 18 commit (`feat(artifacts): implement Phase M typed execution artifacts and atomic checkpoint governance`)
+**Last Completed Checkpoint:** Checkpoint 17 — Phase L reference architecture mining and V2 master roadmap (`cc02245`)
 
 ## Remote Topology
 - **Origin (Writable Fork):** `https://github.com/BD911-Coder/orkestra.git`
@@ -13,28 +13,28 @@
 - **GitHub Auth User:** `BD911-Coder` (Admin on `origin`)
 
 ## Active Files
-- `docs/research/REFERENCE_PROVENANCE.md` (Phase L)
-- `docs/research/REFERENCE_ARCHITECTURE_MINING_2026-10.md` (Phase L)
-- `docs/ORKestra_V2_PERFORMANCE_OS_SPEC.md` (Phase L)
-- `docs/ORKestra_V2_EXECUTION_PLAN.md` (Phase L)
-- `src/orkestra/schemas/artifacts.py` (upcoming Phase M)
-- `src/orkestra/kernel/artifacts.py` (upcoming Phase M)
-- `src/orkestra/kernel/checkpoints.py` (upcoming Phase M)
+- `src/orkestra/schemas/artifacts.py` (Phase M)
+- `src/orkestra/kernel/artifacts.py` (Phase M)
+- `src/orkestra/kernel/checkpoints.py` (Phase M)
+- `src/orkestra/schemas/resource.py` (Phase M)
+- `tests/unit/test_artifacts_and_checkpoints.py` (Phase M)
+- `src/orkestra/schemas/resources_v2.py` (upcoming Phase N)
+- `src/orkestra/kernel/resources_v2.py` (upcoming Phase N)
 
 ## Quality Gate Status
 - **Ruff check:** Clean (`All checks passed!`)
-- **Ruff format:** Clean (`227 files already formatted`)
-- **Mypy:** Clean (`Success: no issues found in 95 source files`)
+- **Ruff format:** Clean (`235 files already formatted`)
+- **Mypy:** Clean (`Success: no issues found in 98 source files`)
 - **Bandit:** Clean (`0 issues identified`)
 - **Pip-audit:** Clean (`0 vulnerabilities`)
-- **Pytest:** 636 tests collected and passing cleanly
+- **Pytest:** 643 tests collected and passing cleanly
 - **Coverage:** >= 85% overall (threshold >= 80%)
 - **Build:** Success (`dist/orkestra_runtime-0.5.5-py3-none-any.whl`)
 
 ## Roadmap Completion Status
 - [x] Phase A–K Foundation (Completed & Remote-Verified)
 - [x] Phase L — Reference Architecture Mining & Provenance
-- [ ] Phase M — Typed Execution Artifacts & Checkpoint Governance
+- [x] Phase M — Typed Execution Artifacts & Checkpoint Governance
 - [ ] Phase N — Resource Intelligence Engine V2
 - [ ] Phase O — Session, Context & Execution Continuity
 - [ ] Phase P — Swarm & Execution Topology Intelligence
@@ -43,7 +43,7 @@
 - [ ] Phase S — Governance, Hardening & Final Acceptance
 
 ## Exact Next Action
-Commit Checkpoint 17 (Phase L) and implement Phase M (Canonical Typed Artifacts in `schemas/artifacts.py` and Checkpoint Governance in `kernel/checkpoints.py`).
+Commit Checkpoint 18 (Phase M) and push to `origin/feat/performance-os-v2`, then implement Phase N (Resource Intelligence Engine V2).
 
 ## Exact Next Verification Command
-`uv run pytest tests/unit/test_readme_claims.py -q`
+`uv run pytest tests/unit/test_artifacts_and_checkpoints.py -q`

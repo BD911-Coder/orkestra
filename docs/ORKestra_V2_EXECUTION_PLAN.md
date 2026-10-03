@@ -11,12 +11,12 @@ This document tracks the incremental engineering milestones, verification criter
   - [x] Establish `REFERENCE_PROVENANCE.md` (clean-room compliance, zero AGPL copying)
   - [x] Establish `REFERENCE_ARCHITECTURE_MINING_2026-10.md` (audit matrix and decisions)
   - [x] Create V2 specification (`ORKestra_V2_PERFORMANCE_OS_SPEC.md`) and execution plan
-- [ ] **Phase M — Typed Execution Artifacts & Checkpoint Governance**
-  - [ ] Implement canonical artifact schemas (`PlanningArtifact`, `ArchitectureArtifact`, `ImplementationArtifact`, `ReviewArtifact`, `VerificationArtifact`, `HandoffArtifact`) in `src/orkestra/schemas/artifacts.py`
-  - [ ] Implement artifact validation and stage completion contracts in `src/orkestra/kernel/artifacts.py`
-  - [ ] Implement atomic versioned checkpointing and historical replacement in `src/orkestra/kernel/checkpoints.py`
-  - [ ] Implement append-only decision ledger with revision trees in `src/orkestra/schemas/decisions.py` and `src/orkestra/store/`
-  - [ ] Write unit & integration tests in `tests/unit/test_artifacts_and_checkpoints.py`
+- [x] **Phase M — Typed Execution Artifacts & Checkpoint Governance**
+  - [x] Implement canonical artifact schemas (`PlanningArtifact`, `ArchitectureArtifact`, `ImplementationArtifact`, `ReviewArtifact`, `VerificationArtifact`, `HandoffArtifact`) in `src/orkestra/schemas/artifacts.py`
+  - [x] Implement artifact validation and stage completion contracts in `src/orkestra/kernel/artifacts.py`
+  - [x] Implement atomic versioned checkpointing and historical replacement in `src/orkestra/kernel/checkpoints.py`
+  - [x] Implement append-only decision ledger with revision trees in `src/orkestra/schemas/resource.py`
+  - [x] Write unit & integration tests in `tests/unit/test_artifacts_and_checkpoints.py`
 - [ ] **Phase N — Resource Intelligence Engine V2**
   - [ ] Implement multi-window quota evaluation (5h, daily, weekly, monthly) in `src/orkestra/kernel/resources_v2.py`
   - [ ] Implement quota provenance, confidence tracking (`UNKNOWN != ABUNDANT`), and headroom formulas
