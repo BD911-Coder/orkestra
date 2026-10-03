@@ -60,16 +60,16 @@ This document details the ordered engineering phases, dependencies, acceptance c
   - [x] Expose subagent hierarchy in Director prompt and Command Center TUI (`agent_tree`)
   - [x] Write unit & integration tests validating multi-agent constraints and nesting limit enforcement
 - [ ] **Phase K — General-Purpose Capability & Performance Operating System**
-  - [ ] **K1 — Generalized Capability Registry** (`src/orkestra/capabilities/registry.py`)
+  - [x] **K1 — Generalized Capability Registry** (`src/orkestra/capabilities/registry.py`)
     - Arbitrary capability taxonomy (software engineering, research, content/media, data analysis, document processing, DevOps)
     - Domain capability definitions, required competencies, input/output contracts
     - Dynamic capability matching and task qualification
-  - [ ] **K2 — Unified Tool & Harness Registry** (`src/orkestra/tools/registry.py`, `src/orkestra/schemas/tools.py`)
+  - [x] **K2 — Unified Tool & Harness Registry** (`src/orkestra/tools/registry.py`, `src/orkestra/schemas/tools.py`)
     - Normalized tool descriptors, schema definitions, input/output schemas
     - Effect classes: SE0 (read-only), SE1 (reversible local write), SE2 (local mutation), SE3 (remote evidence), SE4 (economic/secret)
     - Execution timeout, retry budgets, rate limits, latency & success telemetry
     - Declarative permission gates per provider/agent profile
-  - [ ] **K3 — Generalized Artifact & Multi-Domain Evaluator Registry** (`src/orkestra/verify/evaluators.py`)
+  - [x] **K3 — Generalized Artifact & Multi-Domain Evaluator Registry** (`src/orkestra/verify/evaluators.py`)
     - Pluggable verifier pipeline: code tests/linters, research citations/coherence, document formatting/validity, media assets
     - Multi-modal evaluation receipts with deterministic cryptographic hash chaining
     - Verification gate contracts mapping artifacts to pass/fail/remedy signals

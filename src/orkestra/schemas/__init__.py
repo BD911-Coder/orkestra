@@ -15,10 +15,14 @@ from orkestra.schemas.agent import (
     Usage,
 )
 from orkestra.schemas.capability import (
+    CapabilityDescriptor,
     CapabilityMatrix,
     CapabilityObservation,
     CapabilityProbe,
     CapabilityScore,
+    CompetencyLevel,
+    DomainType,
+    TaskQualification,
 )
 from orkestra.schemas.common import (
     AttemptState,
@@ -44,24 +48,43 @@ from orkestra.schemas.director import (
     ReassignmentAdvice,
     ReviewVerdict,
 )
+from orkestra.schemas.evaluators import (
+    ArtifactType,
+    EvaluationReceipt,
+    EvaluationStatus,
+    EvaluationVerdict,
+)
 from orkestra.schemas.task import Assignment, TaskBrief, TaskSpec
+from orkestra.schemas.tools import (
+    EffectClass,
+    ToolDescriptor,
+    ToolTelemetry,
+)
 
 __all__ = [
     "AgentConfig",
     "AgentEvent",
     "AgentResult",
+    "ArtifactType",
     "Assignment",
     "AttemptState",
     "AuthStatus",
+    "CapabilityDescriptor",
     "CapabilityMatrix",
     "CapabilityObservation",
     "CapabilityProbe",
     "CapabilityScore",
+    "CompetencyLevel",
     "DecisionOption",
     "DirectorAnalysis",
     "DirectorConfig",
     "DirectorPlan",
+    "DomainType",
+    "EffectClass",
     "ErrorKind",
+    "EvaluationReceipt",
+    "EvaluationStatus",
+    "EvaluationVerdict",
     "EventKind",
     "HumanDecision",
     "PlanChallenge",
@@ -76,8 +99,11 @@ __all__ = [
     "SessionRef",
     "TaskBrief",
     "TaskKind",
+    "TaskQualification",
     "TaskSpec",
     "TaskState",
+    "ToolDescriptor",
+    "ToolTelemetry",
     "Usage",
     "VerifyConfig",
     "utc_now",
