@@ -86,11 +86,11 @@ This document details the ordered engineering phases, dependencies, acceptance c
     - Statistical capability scoring per provider/profile/domain
     - Small-sample protection (Bayesian smoothing / Laplace priors, confidence intervals)
     - Closed feedback loop into `ResourceRouter` without opaque black-box ML
-  - [ ] **K7 — Continuous Learning & Policy Candidate Engine** (`src/orkestra/policy/learning.py`)
+  - [x] **K7 — Continuous Learning & Policy Candidate Engine** (`src/orkestra/policy/learning.py`)
     - Pattern observer: detect repeated failure modes, anti-patterns, and high-efficiency strategies
     - Structured hypothesis generation and candidate policy generation
     - Guardrails: candidate policies cannot weaken or bypass deterministic security gates or budget limits
-  - [ ] **K8 — Shadow Evaluation, Candidate Promotion & Safe Rollback** (`src/orkestra/policy/promotion.py`)
+  - [x] **K8 — Shadow Evaluation, Candidate Promotion & Safe Rollback** (`src/orkestra/policy/promotion.py`)
     - Shadow evaluation harness: evaluate candidate policies against historical tasks offline
     - Staged promotion lifecycle: Experimental -> Candidate -> Active -> Deprecated
     - Instant rollback mechanism on regression detection

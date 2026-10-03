@@ -1,42 +1,43 @@
 # CURRENT WORK — RESUME POINTER
 
 **Current Phase:** Phase K — General-Purpose Capability & Performance Operating System
-**Current Objective:** Implement K7 (Continuous Learning & Policy Candidate Engine) and K8 (Shadow Evaluation, Candidate Promotion & Safe Rollback).
+**Current Objective:** Checkpoint 14 — Implement K9 (External Capability & Skill Import with Security Scanning) and K10 (Performance & Capability Benchmark Harness).
 **Current Branch:** `feat/adaptive-ai-command-center`
-**Current HEAD:** `8a38dd7`
-**Last Completed Checkpoint:** Checkpoint 12 — K5 Granular Task Performance Telemetry & K6 Explainable Performance Intelligence (`feat/adaptive-ai-command-center`)
+**Current HEAD:** Pending Checkpoint 13 commit (`feat(policy): implement K7 Continuous Learning and K8 Shadow Evaluation / Promotion`)
+**Last Completed Checkpoint:** Checkpoint 13 — K7 Continuous Learning & Policy Candidate Engine & K8 Shadow Evaluation / Promotion
 
 ## Active Files
-- `src/orkestra/schemas/performance.py` (K5)
-- `src/orkestra/store/migrations.py` (Migration 0006 for K5)
-- `src/orkestra/store/repo.py` (K5 persistence)
-- `src/orkestra/kernel/performance.py` (K6)
-- `src/orkestra/kernel/router.py` (K6 feedback integration)
-- `tests/unit/test_performance_intelligence.py` (K5/K6)
-- `src/orkestra/policy/learning.py` (upcoming K7)
-- `src/orkestra/policy/promotion.py` (upcoming K8)
+- `src/orkestra/schemas/learning.py` (K7/K8)
+- `src/orkestra/policy/learning.py` (K7)
+- `src/orkestra/policy/promotion.py` (K8)
+- `tests/unit/test_policy_learning.py` (K7/K8)
+- `README.md` (Updated test count claim to 610)
+- `src/orkestra/capabilities/scanner.py` (upcoming K9)
+- `src/orkestra/capabilities/importer.py` (upcoming K9)
+- `src/orkestra/benchmark/harness.py` (upcoming K10)
 
 ## Quality Gate Status
 - **Ruff check:** Clean (`All checks passed!`)
-- **Ruff format:** Clean (`211 files already formatted`)
-- **Mypy:** Clean (`Success: no issues found in 82 source files`)
+- **Ruff format:** Clean (`215 files already formatted`)
+- **Mypy:** Clean (`Success: no issues found in 85 source files`)
 - **Bandit:** Clean (`0 issues identified`)
 - **Pip-audit:** Clean (`0 vulnerabilities`)
-- **Coverage:** 95% on K5/K6 performance modules (84% overall, threshold >= 80%)
+- **Coverage:** 94% on learning, 83% on promotion (85% overall, threshold >= 80%)
+- **Pytest:** 610 tests collected, all unit tests clean
 - **Build:** Success (`dist/orkestra_runtime-0.5.5-py3-none-any.whl`)
-- **Task Performance Telemetry (K5):** Complete (Migration 0006, `TaskPerformanceRecord`, `pass@1`, `pass@N`, repairs, token cache hit rates, SQLite tables `task_performance` and `evaluation_receipts`)
-- **Performance Intelligence Engine (K6):** Complete (Laplace smoothing `(k+1)/(n+2)`, sample size confidence bounds `n/(n+5)`, explainable performance multiplier, dynamic routing score feedback into `ResourceRouter`)
+- **Continuous Learning Engine (K7):** Complete (`PatternObservation`, `PolicyHypothesis`, `LearningEngine`, observation clustering, hypothesis synthesis, security guardrails against `FORBIDDEN_POLICY_KEYS`, max worker and effect limits)
+- **Shadow Evaluation & Promotion (K8):** Complete (`PromotionHarness`, shadow evaluation against historical tasks, criteria-gated promotion, instant rollback)
 
 ## Known Blockers & Push Status
 - **GitHub Push Status:** `PUSH_PENDING`
 - **Blocker Detail:** GitHub Personal Access Token for user `BD911-Coder` lacks `createRepository` permission to automatically create a new remote repo via `gh repo create`. Local work proceeding on branch `feat/adaptive-ai-command-center`. Commits are being recorded locally.
 
 ## Uncommitted Work Summary
-- K5 and K6 fully implemented, integrated with `ResourceRouter`, and verified with unit tests in `tests/unit/test_performance_intelligence.py`.
+- K7 and K8 fully implemented and verified with unit tests in `tests/unit/test_policy_learning.py`.
 - Full quality gates verified.
 
 ## Exact Next Action
-Commit Checkpoint 12 (feat(performance): implement K5 task performance telemetry and K6 performance intelligence) and proceed to Checkpoint 13 (K7 Continuous Learning and K8 Shadow Evaluation / Promotion).
+Commit Checkpoint 13 and implement Checkpoint 14 (K9 External Capability & Skill Import with Security Scanning and K10 Benchmark Harness).
 
 ## Exact Next Verification Command
-`uv run pytest tests/unit/test_performance_intelligence.py -q`
+`uv run pytest tests/unit/test_policy_learning.py -q`
