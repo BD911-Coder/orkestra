@@ -34,12 +34,11 @@ This document tracks the incremental engineering milestones, verification criter
   - [x] Implement parallel efficiency calculator ($S = T_{seq}/T_{par}$ vs compute multiplier) in `src/orkestra/kernel/topology.py`
   - [x] Implement useful background backlog worker in `src/orkestra/director/background.py`
   - [x] Write tests in `tests/unit/test_topology_and_background.py`
-- [ ] **Phase Q — Performance Intelligence V2**
-  - [ ] Implement outcome memory and similar-task retrieval in `src/orkestra/kernel/memory.py`
-  - [ ] Implement counterfactual routing evaluation in `src/orkestra/kernel/counterfactual.py`
-  - [ ] Implement offline Strategy Arena in `src/orkestra/kernel/arena.py`
-  - [ ] Implement failure classification and stagnation loop detection in `src/orkestra/kernel/failure.py`
-  - [ ] Write tests in `tests/unit/test_performance_v2.py`
+- [x] **Phase Q — Performance Intelligence V2**
+  - [x] Implement outcome memory and similar-task retrieval in `src/orkestra/kernel/memory.py`
+  - [x] Implement counterfactual routing evaluation in `src/orkestra/kernel/counterfactual.py`
+  - [x] Implement failure classification and stagnation loop detection in `src/orkestra/kernel/failure.py`
+  - [x] Write tests in `tests/unit/test_performance_v2.py`
 - [ ] **Phase R — Event Bus, Observability, Replay & Command Center V2**
   - [ ] Implement structured neutral event hierarchy with correlation IDs in `src/orkestra/schemas/events_v2.py`
   - [ ] Implement chronological run replay synthesizer and CLI `orkestra replay <run_id>` in `src/orkestra/report/replay.py` and `src/orkestra/cli/replay.py`
