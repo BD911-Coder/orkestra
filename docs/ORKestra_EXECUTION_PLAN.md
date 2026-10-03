@@ -73,7 +73,7 @@ This document details the ordered engineering phases, dependencies, acceptance c
     - Pluggable verifier pipeline: code tests/linters, research citations/coherence, document formatting/validity, media assets
     - Multi-modal evaluation receipts with deterministic cryptographic hash chaining
     - Verification gate contracts mapping artifacts to pass/fail/remedy signals
-  - [ ] **K4 — Advanced Context Intelligence Engine** (`src/orkestra/kernel/context.py`)
+  - [x] **K4 — Advanced Context Intelligence Engine** (`src/orkestra/kernel/context.py`)
     - Real-time token consumption tracking per session
     - Differentiate session context window pressure from subscription quota depletion
     - Strategic compaction boundaries (post-plan, post-fix, pre-handoff)
