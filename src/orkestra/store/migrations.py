@@ -226,4 +226,36 @@ MIGRATIONS: list[str] = [
     );
     CREATE INDEX idx_director_states_run ON director_states(run_id);
     """,
+    # 0006 - general-purpose performance telemetry and evaluation receipts
+    """
+    CREATE TABLE task_performance (
+        performance_id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        run_id TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        model TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        pass_at_1 INTEGER NOT NULL,
+        eventual_pass INTEGER NOT NULL,
+        repair_attempts INTEGER NOT NULL DEFAULT 0,
+        duration_s REAL NOT NULL DEFAULT 0.0,
+        input_tokens INTEGER NOT NULL DEFAULT 0,
+        output_tokens INTEGER NOT NULL DEFAULT 0,
+        cached_tokens INTEGER NOT NULL DEFAULT 0,
+        payload TEXT NOT NULL DEFAULT '{}',
+        recorded_at TEXT NOT NULL
+    );
+    CREATE INDEX idx_task_performance_provider_domain ON task_performance(provider, domain);
+    CREATE INDEX idx_task_performance_task ON task_performance(task_id);
+
+    CREATE TABLE evaluation_receipts (
+        receipt_id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        overall_status TEXT NOT NULL,
+        chain_digest TEXT NOT NULL,
+        payload TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX idx_evaluation_receipts_task ON evaluation_receipts(task_id);
+    """,
 ]

@@ -79,10 +79,10 @@ This document details the ordered engineering phases, dependencies, acceptance c
     - Strategic compaction boundaries (post-plan, post-fix, pre-handoff)
     - Context health scoring: token velocity, bloat factor, repetition index
     - Session-to-session memory carrying and handoff summarization
-  - [ ] **K5 — Granular Task Performance Telemetry** (`src/orkestra/telemetry/performance.py`, `src/orkestra/store/migrations/0006_performance.py`)
+  - [x] **K5 — Granular Task Performance Telemetry** (`src/orkestra/telemetry/performance.py`, `src/orkestra/store/migrations/0006_performance.py`)
     - Per-task metric tracking: first-pass success (`pass@1`), eventual success (`pass@N`), repair attempts, active wall duration, token efficiency, prompt cache hit ratios
     - SQLite persistence for task execution logs and benchmark receipts
-  - [ ] **K6 — Explainable Performance Intelligence & Routing Feedback** (`src/orkestra/kernel/performance.py`)
+  - [x] **K6 — Explainable Performance Intelligence & Routing Feedback** (`src/orkestra/kernel/performance.py`)
     - Statistical capability scoring per provider/profile/domain
     - Small-sample protection (Bayesian smoothing / Laplace priors, confidence intervals)
     - Closed feedback loop into `ResourceRouter` without opaque black-box ML

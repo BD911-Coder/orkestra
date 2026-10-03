@@ -23,6 +23,7 @@ from orkestra.schemas.resource import (
 )
 
 if TYPE_CHECKING:
+    from orkestra.kernel.performance import PerformanceIntelligenceEngine
     from orkestra.schemas.task import TaskSpec
     from orkestra.store import Store
 
@@ -55,8 +56,10 @@ class ResourceRouter:
         self,
         policy: RouterPolicy | None = None,
         profiles: list[ExecutionProfile] | None = None,
+        performance_engine: PerformanceIntelligenceEngine | None = None,
     ) -> None:
         self.policy = policy or RouterPolicy()
+        self.performance_engine = performance_engine
         self._profiles: dict[str, ExecutionProfile] = {}
         if profiles:
             for p in profiles:
@@ -265,6 +268,15 @@ class ResourceRouter:
                 self.policy.failure_penalty_weight if p.provider in failed_agents else 0.0
             )
 
+            perf_adj = 0.0
+            if self.performance_engine is not None:
+                domain = getattr(spec, "domain", "software") or "software"
+                perf_adj = self.performance_engine.calculate_routing_score_adjustment(
+                    p.provider, domain
+                )
+                if perf_adj != 0.0:
+                    reasons.append(f"performance_intelligence:{perf_adj:+.2f}")
+
             total_score = (
                 quality_score
                 + fit_score
@@ -273,6 +285,7 @@ class ResourceRouter:
                 - load_penalty
                 - cooldown_penalty
                 - failed_penalty
+                + perf_adj
             )
 
             scored_profiles.append((total_score, p, reasons, waste_risk, scarcity, True))

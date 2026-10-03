@@ -93,10 +93,10 @@ def test_store_resource_persistence() -> None:
     try:
         store = Store(db)
 
-        # Check migration version is 5
+        # Check migration version is at least 5
         row = db.query_one("SELECT version FROM schema_version")
         assert row is not None
-        assert int(row["version"]) == 5
+        assert int(row["version"]) >= 5
 
         now = utc_now().isoformat()
         snap = ProviderUsageSnapshot(

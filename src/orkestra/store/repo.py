@@ -18,6 +18,8 @@ from orkestra.schemas.agent import AgentEvent, AgentResult, Usage
 from orkestra.schemas.capability import CapabilityObservation
 from orkestra.schemas.common import AttemptState, RunState, TaskState, utc_now
 from orkestra.schemas.decision import HumanDecision
+from orkestra.schemas.evaluators import EvaluationReceipt
+from orkestra.schemas.performance import TaskPerformanceRecord
 from orkestra.schemas.resource import (
     HandoffCheckpoint,
     LogicalDirectorState,
@@ -890,3 +892,78 @@ class Store:
             (run_id,),
         )
         return LogicalDirectorState.model_validate_json(row["payload"]) if row else None
+
+    # -------------------------------------------------- performance & evaluation
+
+    def record_task_performance(self, record: TaskPerformanceRecord) -> None:
+        with self.db.tx() as conn:
+            conn.execute(
+                "INSERT INTO task_performance "
+                "(performance_id, task_id, run_id, provider, model, domain, pass_at_1, "
+                "eventual_pass, repair_attempts, duration_s, input_tokens, output_tokens, "
+                "cached_tokens, payload, recorded_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    record.performance_id,
+                    record.task_id,
+                    record.run_id,
+                    record.provider,
+                    record.model,
+                    record.domain,
+                    1 if record.pass_at_1 else 0,
+                    1 if record.eventual_pass else 0,
+                    record.repair_attempts,
+                    record.duration_s,
+                    record.input_tokens,
+                    record.output_tokens,
+                    record.cached_tokens,
+                    record.model_dump_json(),
+                    record.recorded_at.isoformat(),
+                ),
+            )
+
+    def list_task_performance(
+        self,
+        provider: str | None = None,
+        domain: str | None = None,
+        limit: int = 100,
+    ) -> list[TaskPerformanceRecord]:
+        query = "SELECT payload FROM task_performance"
+        params: list[Any] = []
+        conditions: list[str] = []
+        if provider:
+            conditions.append("provider = ?")
+            params.append(provider)
+        if domain:
+            conditions.append("domain = ?")
+            params.append(domain)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY recorded_at DESC LIMIT ?"
+        params.append(limit)
+
+        rows = self.db.query(query, tuple(params))
+        return [TaskPerformanceRecord.model_validate_json(r["payload"]) for r in rows]
+
+    def record_evaluation_receipt(self, receipt: EvaluationReceipt) -> None:
+        with self.db.tx() as conn:
+            conn.execute(
+                "INSERT INTO evaluation_receipts "
+                "(receipt_id, task_id, overall_status, chain_digest, payload, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    receipt.receipt_id,
+                    receipt.task_id,
+                    receipt.overall_status.value,
+                    receipt.chain_digest,
+                    receipt.model_dump_json(),
+                    receipt.created_at.isoformat(),
+                ),
+            )
+
+    def get_evaluation_receipt(self, receipt_id: str) -> EvaluationReceipt | None:
+        row = self.db.query_one(
+            "SELECT payload FROM evaluation_receipts WHERE receipt_id = ?",
+            (receipt_id,),
+        )
+        return EvaluationReceipt.model_validate_json(row["payload"]) if row else None
