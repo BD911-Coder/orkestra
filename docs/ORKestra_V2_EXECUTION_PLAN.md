@@ -23,11 +23,11 @@ This document tracks the incremental engineering milestones, verification criter
   - [x] Implement reset pressure affinity and burn velocity projections
   - [x] Integrate multi-window scoring into `ResourceRouter`
   - [x] Write tests in `tests/unit/test_resources_v2.py`
-- [ ] **Phase O — Session, Context & Execution Continuity**
-  - [ ] Implement session continuity model (cache affinity, context affinity, worktree state) in `src/orkestra/kernel/continuity.py`
-  - [ ] Implement switching cost penalties for cold session handoffs
-  - [ ] Implement context pressure event emission and proactive compaction triggers
-  - [ ] Write tests in `tests/unit/test_continuity.py`
+- [x] **Phase O — Session, Context & Execution Continuity**
+  - [x] Implement session continuity model (cache affinity, context affinity, worktree state) in `src/orkestra/kernel/continuity.py`
+  - [x] Implement switching cost penalties for cold session handoffs
+  - [x] Implement context pressure event emission and proactive compaction triggers
+  - [x] Write tests in `tests/unit/test_continuity.py`
 - [ ] **Phase P — Swarm & Execution Topology Intelligence**
   - [ ] Implement `SwarmTopology` schema (`HIERARCHICAL`, `MESH`, `STAR`, `ADAPTIVE`) in `src/orkestra/schemas/topology.py`
   - [ ] Implement parent-child subagent resource attribution and nesting limits

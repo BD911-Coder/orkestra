@@ -24,6 +24,7 @@ from orkestra.schemas.resource import (
 
 if TYPE_CHECKING:
     from orkestra.kernel.performance import PerformanceIntelligenceEngine
+    from orkestra.schemas.continuity import SessionContinuityState
     from orkestra.schemas.resources_v2 import MultiWindowQuotaProfile
     from orkestra.schemas.task import TaskSpec
     from orkestra.store import Store
@@ -187,6 +188,7 @@ class ResourceRouter:
         store: Store | None = None,
         allowed_agents: list[str] | None = None,
         multi_window_profiles: dict[str, MultiWindowQuotaProfile] | None = None,
+        session_state: SessionContinuityState | None = None,
     ) -> RoutingDecision:
         """Scores candidate profiles and returns an auditable RoutingDecision."""
         failed_agents = failed_agents or []
@@ -275,6 +277,16 @@ class ResourceRouter:
                     throttle_penalty = 2.0
                     reasons.append("v2_throttle_burn_velocity_exceeded:-2.00")
 
+            # Session Continuity & Switching Penalty
+            continuity_adj = 0.0
+            if session_state and session_state.current_provider:
+                if session_state.current_provider == p.provider:
+                    continuity_adj = 1.0
+                    reasons.append("session_warm_affinity:+1.00")
+                else:
+                    continuity_adj = -1.5
+                    reasons.append("cold_session_switch_penalty:-1.50")
+
             # Load & Health Penalties
             load_penalty = 0.0
             if snap and snap.active_concurrency >= snap.max_concurrency:
@@ -305,6 +317,7 @@ class ResourceRouter:
                 + waste_bonus
                 - scarcity_penalty
                 - throttle_penalty
+                + continuity_adj
                 - load_penalty
                 - cooldown_penalty
                 - failed_penalty
