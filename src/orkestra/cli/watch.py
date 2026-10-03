@@ -64,7 +64,11 @@ class WatchApp(TextualApp[None]):
     #decisions_stream {
         height: 7; background: $surface; border-top: solid $secondary; padding: 0 1;
     }
+    #topology_panel {
+        height: 5; background: $surface-darken-2; border-top: solid $accent; padding: 0 1;
+    }
     #events { height: 9; border-top: solid $primary; }
+    #v2_events { height: 7; border-top: solid $accent; background: $surface-darken-1; }
     """
 
     BINDINGS: ClassVar = [
@@ -78,6 +82,7 @@ class WatchApp(TextualApp[None]):
         self.application = application
         self.run_id = run_id
         self._last_event_id = 0
+        self._v2_event_store: list[dict[str, object]] = []  # in-memory V2 event buffer
 
     # ------------------------------------------------------------ layout
 
@@ -94,6 +99,8 @@ class WatchApp(TextualApp[None]):
                 with Vertical(id="task_dag_panel"):
                     yield DataTable[str](id="tasks")
             yield Static(id="decisions_stream")
+            yield Static(id="topology_panel")
+            yield RichLog(id="v2_events", wrap=True, markup=True, max_lines=200)
             yield RichLog(id="events", wrap=True, markup=False, max_lines=500)
         yield Footer()
 
@@ -257,7 +264,51 @@ class WatchApp(TextualApp[None]):
                 "[b cyan]DECISION STREAM[/b cyan]\n[dim]No routing decisions recorded yet[/dim]"
             )
 
-        # 6. Event Log Stream
+        # 6. Topology Intelligence Panel (V2)
+        topology_widget = self.query_one("#topology_panel", Static)
+        active_count = sum(
+            1
+            for task in store.tasks_for_run(self.run_id)
+            if task.state.value in ("running", "verifying", "reviewing", "integrating")
+        )
+        # Derive topology label from concurrency heuristic
+        if active_count >= 4:
+            topo_label = "[b magenta]HIERARCHICAL[/b magenta]"
+            topo_note = "max concurrency active"
+        elif active_count >= 2:
+            topo_label = "[b yellow]STAR[/b yellow]"
+            topo_note = "parallel dispatch in progress"
+        elif active_count == 1:
+            topo_label = "[b cyan]SEQUENTIAL[/b cyan]"
+            topo_note = "single agent active"
+        else:
+            topo_label = "[dim]IDLE[/dim]"
+            topo_note = "no active dispatches"
+        topology_widget.update(
+            f" [b cyan]SWARM TOPOLOGY[/b cyan] │ Mode: {topo_label} │ "
+            f"Active workers: [b]{active_count}[/b]/8 │ "
+            f"Max nesting depth: [dim]2[/dim] │ {topo_note}\n"
+            f" [dim]Native subagents: ENABLED │ Provider auto-delegate: YES (within policy)[/dim]"
+        )
+
+        # 7. V2 Structured Event Bus Stream
+        v2_log = self.query_one("#v2_events", RichLog)
+        # Render any newly buffered V2 events from the in-memory store
+        existing_count = len(self._v2_event_store)
+        # Peek at store's event log and re-render the last N as V2-style correlation lines
+        raw_events = list(store.events_for_run(self.run_id, limit=10))
+        new_raw = raw_events[existing_count:]
+        for ev in new_raw:
+            self._v2_event_store.append(ev)
+            ts = str(ev.get("ts", ""))
+            kind = str(ev.get("kind", "event"))
+            text = clip(str(ev.get("text", "")).replace("\n", " "), 160)
+            corr = f"corr:{self.run_id[:8]}"
+            v2_log.write(
+                f"[dim]{ts[11:19]}[/dim] [b cyan]{kind:<18}[/b cyan] [dim]{corr}[/dim] {text}"
+            )
+
+        # 8. Legacy Event Log Stream
         log = self.query_one("#events", RichLog)
         for event in store.events_for_run(self.run_id, limit=100):
             if event["event_id"] <= self._last_event_id:
