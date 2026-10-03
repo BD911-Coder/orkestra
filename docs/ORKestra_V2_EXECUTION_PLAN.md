@@ -28,12 +28,12 @@ This document tracks the incremental engineering milestones, verification criter
   - [x] Implement switching cost penalties for cold session handoffs
   - [x] Implement context pressure event emission and proactive compaction triggers
   - [x] Write tests in `tests/unit/test_continuity.py`
-- [ ] **Phase P — Swarm & Execution Topology Intelligence**
-  - [ ] Implement `SwarmTopology` schema (`HIERARCHICAL`, `MESH`, `STAR`, `ADAPTIVE`) in `src/orkestra/schemas/topology.py`
-  - [ ] Implement parent-child subagent resource attribution and nesting limits
-  - [ ] Implement parallel efficiency calculator ($S = T_{seq}/T_{par}$ vs compute multiplier) in `src/orkestra/kernel/topology.py`
-  - [ ] Implement useful background backlog worker in `src/orkestra/director/background.py`
-  - [ ] Write tests in `tests/unit/test_topology_and_background.py`
+- [x] **Phase P — Swarm & Execution Topology Intelligence**
+  - [x] Implement `SwarmTopology` schema (`HIERARCHICAL`, `MESH`, `STAR`, `ADAPTIVE`) in `src/orkestra/schemas/topology.py`
+  - [x] Implement parent-child subagent resource attribution and nesting limits
+  - [x] Implement parallel efficiency calculator ($S = T_{seq}/T_{par}$ vs compute multiplier) in `src/orkestra/kernel/topology.py`
+  - [x] Implement useful background backlog worker in `src/orkestra/director/background.py`
+  - [x] Write tests in `tests/unit/test_topology_and_background.py`
 - [ ] **Phase Q — Performance Intelligence V2**
   - [ ] Implement outcome memory and similar-task retrieval in `src/orkestra/kernel/memory.py`
   - [ ] Implement counterfactual routing evaluation in `src/orkestra/kernel/counterfactual.py`
