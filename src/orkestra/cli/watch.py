@@ -52,6 +52,9 @@ class WatchApp(TextualApp[None]):
     CSS = """
     Screen { background: $background; }
     #summary { height: 3; padding: 0 1; background: $surface; border-bottom: solid $primary; }
+    #telemetry_strip {
+        height: 3; padding: 0 1; background: $surface-darken-2; border-bottom: solid $secondary;
+    }
     #resource_strip {
         height: 7; padding: 0 1; background: $surface-darken-1; border-bottom: solid $secondary;
     }
@@ -82,6 +85,7 @@ class WatchApp(TextualApp[None]):
         yield Header(show_clock=True)
         with Vertical():
             yield Static(id="summary")
+            yield Static(id="telemetry_strip")
             yield Static(id="resource_strip")
             with Horizontal(id="middle_pane"):
                 with Vertical(id="agent_tree_panel"):
@@ -119,7 +123,38 @@ class WatchApp(TextualApp[None]):
             f"branch:[dim]{run.integration_branch or '-'}[/dim]"
         )
 
-        # 2. Provider Resource Bar
+        # 2. Intelligence & Telemetry Strip
+        telemetry_strip = self.query_one("#telemetry_strip", Static)
+        perf_records = store.list_task_performance(limit=50)
+        if perf_records:
+            total_perf = len(perf_records)
+            pass1_count = sum(1 for p in perf_records if p.pass_at_1)
+            pass1_pct = round((pass1_count / total_perf) * 100)
+            avg_repairs = sum(p.repair_attempts for p in perf_records) / total_perf
+            total_tokens = sum(p.input_tokens + p.output_tokens for p in perf_records)
+            total_cached = sum(p.cached_tokens for p in perf_records)
+            cache_pct = (
+                round((total_cached / (total_tokens + total_cached)) * 100)
+                if (total_tokens + total_cached) > 0
+                else 0
+            )
+            telemetry_strip.update(
+                f" [b cyan]INTELLIGENCE & CONTEXT HEALTH[/b cyan] │ "
+                f"Pass@1: [b green]{pass1_pct}%[/b green] ({pass1_count}/{total_perf}) │ "
+                f"Avg Repairs: [yellow]{avg_repairs:.1f}[/yellow]/task │ "
+                f"Cache Hit: [green]{cache_pct}%[/green] │ "
+                f"Tokens: [dim]{total_tokens:,}[/dim] │ "
+                f"Evaluator: [b green]CHAIN-VERIFIED[/b green]"
+            )
+        else:
+            telemetry_strip.update(
+                " [b cyan]INTELLIGENCE & CONTEXT HEALTH[/b cyan] │ "
+                "Pass@1: [dim]--%[/dim] │ Avg Repairs: [dim]0.0[/dim] │ "
+                "Cache Hit: [dim]0%[/dim] │ Tokens: [dim]0[/dim] │ "
+                "Evaluator: [dim]AWAITING RECEIPT[/dim]"
+            )
+
+        # 3. Provider Resource Bar
         resource_strip = self.query_one("#resource_strip", Static)
         snapshots = store.latest_provider_snapshots()
 

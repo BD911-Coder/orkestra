@@ -20,6 +20,7 @@ import orkestra
 from orkestra.app import CONFIG_RELPATH, App, build_app
 from orkestra.cli.benchmark import benchmark_app
 from orkestra.cli.capabilities import capabilities_app
+from orkestra.cli.onboard import onboard_command
 from orkestra.cli.text import clip
 from orkestra.errors import ConfigError, OrkestraError
 from orkestra.schemas.agent import AgentEvent, EventKind
@@ -39,6 +40,7 @@ app.add_typer(routing_app, name="routing")
 
 app.add_typer(benchmark_app, name="benchmark")
 app.add_typer(capabilities_app, name="capabilities")
+app.command("onboard")(onboard_command)
 
 console = Console()
 err_console = Console(stderr=True)

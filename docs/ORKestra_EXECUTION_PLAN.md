@@ -59,7 +59,7 @@ This document details the ordered engineering phases, dependencies, acceptance c
   - [x] Integrate nested agent token & concurrency accounting into QuotaTracker & ResourceRouter
   - [x] Expose subagent hierarchy in Director prompt and Command Center TUI (`agent_tree`)
   - [x] Write unit & integration tests validating multi-agent constraints and nesting limit enforcement
-- [ ] **Phase K — General-Purpose Capability & Performance Operating System**
+- [x] **Phase K — General-Purpose Capability & Performance Operating System**
   - [x] **K1 — Generalized Capability Registry** (`src/orkestra/capabilities/registry.py`)
     - Arbitrary capability taxonomy (software engineering, research, content/media, data analysis, document processing, DevOps)
     - Domain capability definitions, required competencies, input/output contracts
@@ -102,10 +102,10 @@ This document details the ordered engineering phases, dependencies, acceptance c
     - Reproducible test batteries across domains (coding, reasoning, research, refactoring)
     - Standardized scorecard generation (pass rates, latency, token spend, repair efficiency)
     - CLI commands: `orkestra benchmark list`, `orkestra benchmark run`
-  - [ ] **K11 — Intelligent Project Onboarding & Capability Auto-Detection** (`src/orkestra/director/onboarding.py`, `cli/onboard.py`)
+  - [x] **K11 — Intelligent Project Onboarding & Capability Auto-Detection** (`src/orkestra/director/onboarding.py`, `cli/onboard.py`)
     - Repository marker detection (languages, frameworks, test suites, linters, databases, docs)
     - Auto-generation of optimized `.orkestra/config.toml` and baseline project capabilities
-  - [ ] **K12 — Command Center Terminal UI Integration & Full Verification**
+  - [x] **K12 — Command Center Terminal UI Integration & Full Verification**
     - Enhance `watch.py` with Context Health gauges, Performance Telemetry cards, and Evaluator status
     - Full quality gate run: ruff, mypy, bandit, pip-audit, pytest with coverage >= 80%, uv build
 
