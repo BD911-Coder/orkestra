@@ -41,13 +41,13 @@ This document details the ordered engineering phases, dependencies, acceptance c
   - [x] Expose `orkestra usage` and `orkestra routing explain` commands
   - [x] Extend configuration for adaptive routing, waste-risk, handoffs, overrides
   - [x] Update product documentation (`README.md`, `docs/CLI.md`, `docs/PROVIDERS.md`, etc.)
-- [ ] **Phase I — Hardening, Verification & Evidence**
-  - [ ] Full quality gate suite execution (ruff, mypy, bandit, pip-audit, pytest, coverage >= 80%, build)
-  - [ ] Windows local smoke validation
-  - [ ] Demonstration scenarios (reset pressure, multi-window scarcity, quota handoff, stagnation escalation, waiting for quota)
-  - [ ] Final evidence report update & milestone push
-- [ ] **Phase J — Native Multi-Agent Policy & Nested Worker Governance**
-  - [ ] Implement `NativeMultiAgentPolicyConfig` in `src/orkestra/schemas/config.py`:
+- [x] **Phase I — Hardening, Verification & Evidence**
+  - [x] Full quality gate suite execution (ruff, mypy, bandit, pip-audit, pytest, coverage >= 80%, build)
+  - [x] Windows local smoke validation
+  - [x] Demonstration scenarios (reset pressure, multi-window scarcity, quota handoff, stagnation escalation, waiting for quota)
+  - [x] Final evidence report update & milestone push
+- [x] **Phase J — Native Multi-Agent Policy & Nested Worker Governance**
+  - [x] Implement `NativeMultiAgentPolicyConfig` in `src/orkestra/schemas/config.py`:
     - `allow_subagents`: bool = True (Allow provider-native subagents)
     - `allow_agent_teams`: bool = True (Allow provider-native agent teams)
     - `max_nested_workers`: int = 4 (Maximum nested workers)
@@ -55,8 +55,58 @@ This document details the ordered engineering phases, dependencies, acceptance c
     - `max_subagent_depth`: int = 2 (Maximum depth: 2)
     - `allow_provider_auto_decide`: bool = True (Within Orkestra limits)
     - `count_nested_in_quota`: bool = True (ALWAYS count in quota/resource planning)
-  - [ ] Implement deterministic PolicyEngine governance rules for nested dispatches & nesting depth
-  - [ ] Integrate nested agent token & concurrency accounting into QuotaTracker & ResourceRouter
-  - [ ] Expose subagent hierarchy in Director prompt and Command Center TUI (`agent_tree`)
-  - [ ] Write unit & integration tests validating multi-agent constraints and nesting limit enforcement
+  - [x] Implement deterministic PolicyEngine governance rules for nested dispatches & nesting depth
+  - [x] Integrate nested agent token & concurrency accounting into QuotaTracker & ResourceRouter
+  - [x] Expose subagent hierarchy in Director prompt and Command Center TUI (`agent_tree`)
+  - [x] Write unit & integration tests validating multi-agent constraints and nesting limit enforcement
+- [ ] **Phase K — General-Purpose Capability & Performance Operating System**
+  - [ ] **K1 — Generalized Capability Registry** (`src/orkestra/capabilities/registry.py`)
+    - Arbitrary capability taxonomy (software engineering, research, content/media, data analysis, document processing, DevOps)
+    - Domain capability definitions, required competencies, input/output contracts
+    - Dynamic capability matching and task qualification
+  - [ ] **K2 — Unified Tool & Harness Registry** (`src/orkestra/tools/registry.py`, `src/orkestra/schemas/tools.py`)
+    - Normalized tool descriptors, schema definitions, input/output schemas
+    - Effect classes: SE0 (read-only), SE1 (reversible local write), SE2 (local mutation), SE3 (remote evidence), SE4 (economic/secret)
+    - Execution timeout, retry budgets, rate limits, latency & success telemetry
+    - Declarative permission gates per provider/agent profile
+  - [ ] **K3 — Generalized Artifact & Multi-Domain Evaluator Registry** (`src/orkestra/verify/evaluators.py`)
+    - Pluggable verifier pipeline: code tests/linters, research citations/coherence, document formatting/validity, media assets
+    - Multi-modal evaluation receipts with deterministic cryptographic hash chaining
+    - Verification gate contracts mapping artifacts to pass/fail/remedy signals
+  - [ ] **K4 — Advanced Context Intelligence Engine** (`src/orkestra/kernel/context.py`)
+    - Real-time token consumption tracking per session
+    - Differentiate session context window pressure from subscription quota depletion
+    - Strategic compaction boundaries (post-plan, post-fix, pre-handoff)
+    - Context health scoring: token velocity, bloat factor, repetition index
+    - Session-to-session memory carrying and handoff summarization
+  - [ ] **K5 — Granular Task Performance Telemetry** (`src/orkestra/telemetry/performance.py`, `src/orkestra/store/migrations/0006_performance.py`)
+    - Per-task metric tracking: first-pass success (`pass@1`), eventual success (`pass@N`), repair attempts, active wall duration, token efficiency, prompt cache hit ratios
+    - SQLite persistence for task execution logs and benchmark receipts
+  - [ ] **K6 — Explainable Performance Intelligence & Routing Feedback** (`src/orkestra/kernel/performance.py`)
+    - Statistical capability scoring per provider/profile/domain
+    - Small-sample protection (Bayesian smoothing / Laplace priors, confidence intervals)
+    - Closed feedback loop into `ResourceRouter` without opaque black-box ML
+  - [ ] **K7 — Continuous Learning & Policy Candidate Engine** (`src/orkestra/policy/learning.py`)
+    - Pattern observer: detect repeated failure modes, anti-patterns, and high-efficiency strategies
+    - Structured hypothesis generation and candidate policy generation
+    - Guardrails: candidate policies cannot weaken or bypass deterministic security gates or budget limits
+  - [ ] **K8 — Shadow Evaluation, Candidate Promotion & Safe Rollback** (`src/orkestra/policy/promotion.py`)
+    - Shadow evaluation harness: evaluate candidate policies against historical tasks offline
+    - Staged promotion lifecycle: Experimental -> Candidate -> Active -> Deprecated
+    - Instant rollback mechanism on regression detection
+  - [ ] **K9 — External Capability & Skill Import with Security Scanning** (`src/orkestra/capabilities/scanner.py`, `importer.py`)
+    - Skill scanner: AST static analysis, permission check, prompt injection detection, safe directory sandboxing
+    - Universal skill schema adapter (imports compliant `SKILL.md` from external ecosystems like ECC without runtime dependencies)
+    - Lazy skill selection: dynamic injection of relevant skills based on intent and repo context
+  - [ ] **K10 — Comprehensive Performance & Capability Benchmark Harness** (`src/orkestra/benchmark/harness.py`, `cli/benchmark.py`)
+    - Reproducible test batteries across domains (coding, reasoning, research, refactoring)
+    - Standardized scorecard generation (pass rates, latency, token spend, repair efficiency)
+    - CLI commands: `orkestra benchmark run`, `orkestra benchmark report`
+  - [ ] **K11 — Intelligent Project Onboarding & Capability Auto-Detection** (`src/orkestra/director/onboarding.py`, `cli/onboard.py`)
+    - Repository marker detection (languages, frameworks, test suites, linters, databases, docs)
+    - Auto-generation of optimized `.orkestra/config.toml` and baseline project capabilities
+  - [ ] **K12 — Command Center Terminal UI Integration & Full Verification**
+    - Enhance `watch.py` with Context Health gauges, Performance Telemetry cards, and Evaluator status
+    - Full quality gate run: ruff, mypy, bandit, pip-audit, pytest with coverage >= 80%, uv build
+
 
